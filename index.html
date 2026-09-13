@@ -1,922 +1,608 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador Financeiro & Metas</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
-                        },
-                        darkbg: '#0f172a',
-                        darkcard: '#1e293b',
-                        darkborder: '#334155'
-                    }
-                }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador Financeiro & Metas</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
             }
+          }
         }
-    </script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-    </style>
+      }
+    }
+  </script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="min-h-screen bg-slate-900 text-slate-100 pb-12">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased">
 
-    <!-- Header -->
-    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-xl">
-                    <i class="fa-solid fa-wallet"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold text-white leading-none">FinanPlan</h1>
-                    <span class="text-xs text-slate-400">Planejador de Gastos e Objetivos</span>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-3">
-                <button onclick="resetDataPrompt()" title="Restaurar dados padrão" class="text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:bg-slate-700 text-slate-300 transition-colors flex items-center gap-1.5">
-                    <i class="fa-solid fa-rotate-right"></i>
-                    <span class="hidden sm:inline">Resetar Dados</span>
-                </button>
-            </div>
+  <!-- Header / Navbar -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
+          <i class="fa-solid fa-wallet text-xl"></i>
         </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-
-        <!-- Resumo Principal (KPIs) -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            
-            <!-- Renda -->
-            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
-                    <span>Renda Mensal</span>
-                    <i class="fa-solid fa-hand-holding-dollar text-emerald-400 text-base"></i>
-                </div>
-                <div class="text-xl lg:text-2xl font-bold text-white" id="kpi-renda">R$ 0,00</div>
-                <div class="text-[11px] text-slate-400 mt-1">Sua receita bruta cadastrada</div>
-            </div>
-
-            <!-- Reservas e Metas -->
-            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
-                    <span>Metas do Mês</span>
-                    <i class="fa-solid fa-bullseye text-cyan-400 text-base"></i>
-                </div>
-                <div class="text-xl lg:text-2xl font-bold text-cyan-400" id="kpi-metas">R$ 0,00</div>
-                <div class="text-[11px] text-slate-400 mt-1">Para metas de médio/longo prazo</div>
-            </div>
-
-            <!-- Reserva de Emergência -->
-            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
-                    <span>Reserva Emergência</span>
-                    <i class="fa-solid fa-shield-halved text-indigo-400 text-base"></i>
-                </div>
-                <div class="text-xl lg:text-2xl font-bold text-indigo-400" id="kpi-reserva">R$ 0,00</div>
-                <div class="text-[11px] text-slate-400 mt-1" id="kpi-reserva-sub">Depósito mensal sugerido</div>
-            </div>
-
-            <!-- Teto Máximo Recomendado -->
-            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-800/90">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
-                    <span>Teto de Gastos</span>
-                    <i class="fa-solid fa-gauge-high text-amber-400 text-base"></i>
-                </div>
-                <div class="text-xl lg:text-2xl font-bold text-amber-400" id="kpi-teto">R$ 0,00</div>
-                <div class="text-[11px] text-slate-400 mt-1">Limite seguro para despesas</div>
-            </div>
-
-            <!-- Gastos Atuais -->
-            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
-                    <span>Despesas Totais</span>
-                    <i class="fa-solid fa-arrow-trend-down text-rose-400 text-base"></i>
-                </div>
-                <div class="text-xl lg:text-2xl font-bold text-rose-400" id="kpi-gastos">R$ 0,00</div>
-                <div class="text-[11px] text-slate-400 mt-1" id="kpi-gastos-sub">Contas cadastradas</div>
-            </div>
-
-            <!-- Saldo Livre -->
-            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden border-emerald-500/30">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
-                    <span>Saldo Sobrando</span>
-                    <i class="fa-solid fa-piggy-bank text-emerald-400 text-base"></i>
-                </div>
-                <div class="text-xl lg:text-2xl font-bold text-emerald-400" id="kpi-saldo">R$ 0,00</div>
-                <div class="text-[11px] text-slate-400 mt-1">Livre após tudo financiado</div>
-            </div>
-
-        </section>
-
-        <!-- Banner de Alertas Inteligentes -->
-        <div id="alert-banner" class="hidden rounded-xl p-4 border transition-all duration-300 flex items-start gap-3">
-            <div id="alert-icon" class="text-xl mt-0.5"></div>
-            <div class="flex-1">
-                <h4 id="alert-title" class="font-bold text-sm"></h4>
-                <p id="alert-desc" class="text-xs mt-0.5 opacity-90"></p>
-            </div>
+        <div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
+            Gestão & Planejamento
+          </h1>
+          <p class="text-xs text-slate-400">Controle financeiro e metas</p>
         </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700/50">
+        <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+        <span>Dados armazenados localmente</span>
+      </div>
+    </div>
+  </header>
 
-        <!-- Seção Principal de Painel / Gráficos & Renda -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8 w-full">
 
-            <!-- Coluna Esquerda: Renda & Reserva Setup -->
-            <div class="space-y-6">
-                <!-- Card de Entrada da Renda -->
-                <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5">
-                    <h3 class="text-base font-semibold text-white flex items-center gap-2 mb-4">
-                        <i class="fa-solid fa-money-bill-wave text-emerald-400"></i>
-                        Ganhos Mensais
-                    </h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Qual a sua renda mensal total?</label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-2.5 text-slate-400 font-semibold text-sm">R$</span>
-                                <input type="number" id="input-renda" step="0.01" min="0" placeholder="0,00" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 pl-10 pr-3 text-white font-bold focus:outline-none focus:border-emerald-500 text-lg">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card de Configuração da Reserva de Emergência -->
-                <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-base font-semibold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-shield-cat text-indigo-400"></i>
-                            Reserva de Emergência
-                        </h3>
-                        <span class="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Proteção</span>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Modo de Cálculo</label>
-                            <select id="select-reserva-tipo" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-                                <option value="percent">% da Renda Mensal</option>
-                                <option value="months">Meses de Custo Fixo (Meta de Fundo)</option>
-                                <option value="fixed">Valor Fixo Mensal (R$)</option>
-                            </select>
-                        </div>
-
-                        <div id="reserva-val-container">
-                            <label id="reserva-label" class="block text-xs font-medium text-slate-300 mb-1">Porcentagem da Renda (%)</label>
-                            <input type="number" id="input-reserva-val" step="0.5" min="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-indigo-500">
-                        </div>
-
-                        <!-- Resumo do Fundo de Emergência -->
-                        <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-700/50 text-xs space-y-1.5">
-                            <div class="flex justify-between text-slate-300">
-                                <span>Alocação Mensal:</span>
-                                <span id="reserva-mensal-calc" class="font-semibold text-indigo-300">R$ 0,00</span>
-                            </div>
-                            <div class="flex justify-between text-slate-400">
-                                <span>Meta Total do Fundo (6 meses de gastos):</span>
-                                <span id="reserva-fundo-alvo" class="font-medium text-slate-200">R$ 0,00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Coluna Central & Direita: Visão Gráfica -->
-            <div class="lg:col-span-2 bg-slate-800 border border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between">
-                <div>
-                    <h3 class="text-base font-semibold text-white flex items-center justify-between mb-2">
-                        <span class="flex items-center gap-2">
-                            <i class="fa-solid fa-chart-pie text-cyan-400"></i>
-                            Distribuição da Renda & Orçamento
-                        </span>
-                        <span class="text-xs text-slate-400 font-normal">Recomendação Orçamentária</span>
-                    </h3>
-                    <p class="text-xs text-slate-400 mb-4">Veja visualmente para onde está indo o seu dinheiro este mês.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center my-auto">
-                    <!-- Gráfico Canvas -->
-                    <div class="relative h-56 flex items-center justify-center">
-                        <canvas id="chart-orcamento"></canvas>
-                    </div>
-
-                    <!-- Legendas e Estatísticas Adicionais -->
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/40">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-cyan-500"></span>
-                                <span class="text-slate-300">Metas & Sonhos</span>
-                            </div>
-                            <span id="pct-metas" class="font-bold text-slate-200">0%</span>
-                        </div>
-
-                        <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/40">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
-                                <span class="text-slate-300">Reserva Emergência</span>
-                            </div>
-                            <span id="pct-reserva" class="font-bold text-slate-200">0%</span>
-                        </div>
-
-                        <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/40">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                                <span class="text-slate-300">Despesas Cadastradas</span>
-                            </div>
-                            <span id="pct-gastos" class="font-bold text-slate-200">0%</span>
-                        </div>
-
-                        <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/40">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                                <span class="text-slate-300">Saldo Livre (Sobra)</span>
-                            </div>
-                            <span id="pct-livre" class="font-bold text-slate-200">0%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+    <!-- Top Cards: Renda, Gastos, Reserva e Metas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Card Renda Total -->
+      <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Renda Mensal</p>
+            <h3 class="text-2xl font-extrabold text-emerald-400 mt-1" id="kpi-income">R$ 0,00</h3>
+          </div>
+          <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+            <i class="fa-solid fa-money-bill-wave text-lg"></i>
+          </div>
         </div>
-
-        <!-- Seção de Metas / Objetivos -->
-        <section class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-flag-checkered text-cyan-400"></i>
-                        Seus Objetivos & Conquistas (Carro, Casa, Viagens)
-                    </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">O sistema separa o dinheiro necessário do seu mês antes de liberar o teto para despesas.</p>
-                </div>
-                <button onclick="openGoalModal()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Nova Meta
-                </button>
-            </div>
-
-            <!-- Lista de Metas em Cards -->
-            <div id="goals-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Inserido dinamicamente via JavaScript -->
-            </div>
-        </section>
-
-        <!-- Seção de Gerenciamento de Despesas -->
-        <section class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-list-check text-rose-400"></i>
-                        Contas & Despesas Mensais
-                    </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Cadastre suas despesas fixas e variáveis para ver se cabe no teto disponível.</p>
-                </div>
-                <button onclick="openExpenseModal()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Adicionar Despesa
-                </button>
-            </div>
-
-            <!-- Tabela de Despesas -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-900/80 text-xs text-slate-400 uppercase border-b border-slate-700">
-                        <tr>
-                            <th class="py-3 px-4">Nome</th>
-                            <th class="py-3 px-4">Categoria</th>
-                            <th class="py-3 px-4">Tipo</th>
-                            <th class="py-3 px-4 text-right">Valor (R$)</th>
-                            <th class="py-3 px-4 text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="expenses-table-body" class="divide-y divide-slate-700/50">
-                        <!-- Inserido via JS -->
-                    </tbody>
-                </table>
-            </div>
-            <div id="expenses-empty" class="hidden text-center py-8 text-slate-500 text-xs">
-                Nenhuma despesa cadastrada ainda. Clique no botão acima para adicionar.
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Modal: Adicionar/Editar Meta -->
-    <div id="modal-goal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-fade-in">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-                <h3 class="font-bold text-white text-base" id="modal-goal-title">Nova Meta / Objetivo</h3>
-                <button onclick="closeGoalModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            
-            <form id="form-goal" onsubmit="saveGoal(event)" class="space-y-4">
-                <input type="hidden" id="goal-id">
-                
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome do Objetivo</label>
-                    <input type="text" id="goal-name" required placeholder="Ex: Entrada do Carro, Casa Própria, Viagem" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-cyan-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Valor Total Necessário (R$)</label>
-                    <input type="number" id="goal-total" step="0.01" min="1" required placeholder="50000,00" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-cyan-500">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Prazo (Em Meses)</label>
-                        <input type="number" id="goal-months" min="1" required placeholder="24" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-cyan-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Ícone</label>
-                        <select id="goal-icon" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-cyan-500">
-                            <option value="fa-car">🚗 Carro</option>
-                            <option value="fa-house">🏠 Casa</option>
-                            <option value="fa-plane">✈️ Viagem</option>
-                            <option value="fa-graduation-cap">🎓 Estudos</option>
-                            <option value="fa-laptop">💻 Tecnologia</option>
-                            <option value="fa-gem">💎 Outros</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 text-xs">
-                    <span class="text-slate-400">Reserva Mensal Estimada:</span>
-                    <span id="goal-preview-calc" class="font-bold text-cyan-400 block text-sm mt-0.5">R$ 0,00 / mês</span>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeGoalModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-300 hover:bg-slate-600 text-xs">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-cyan-600 text-white font-medium hover:bg-cyan-500 text-xs">Salvar Meta</button>
-                </div>
-            </form>
+        <div class="mt-4 text-xs text-slate-400">
+          Entradas registradas para este mês
         </div>
+      </div>
+
+      <!-- Card Despesas Totais -->
+      <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Contas & Gastos Fixos</p>
+            <h3 class="text-2xl font-extrabold text-rose-400 mt-1" id="kpi-expenses">R$ 0,00</h3>
+          </div>
+          <div class="p-3 bg-rose-500/10 text-rose-400 rounded-xl">
+            <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
+          </div>
+        </div>
+        <div class="mt-4 text-xs text-slate-400" id="kpi-expenses-ratio">
+          0% da sua renda comprometida
+        </div>
+      </div>
+
+      <!-- Card Aporte Metas + Reserva -->
+      <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Aporte Necessário (Metas + Reserva)</p>
+            <h3 class="text-2xl font-extrabold text-sky-400 mt-1" id="kpi-savings-needed">R$ 0,00</h3>
+          </div>
+          <div class="p-3 bg-sky-500/10 text-sky-400 rounded-xl">
+            <i class="fa-solid fa-piggy-bank text-lg"></i>
+          </div>
+        </div>
+        <div class="mt-4 text-xs text-slate-400">
+          Guardar todo mês para metas e reserva
+        </div>
+      </div>
+
+      <!-- Card Saldo Livre Recomendado -->
+      <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Limite p/ Gastar Livremente</p>
+            <h3 class="text-2xl font-extrabold text-amber-400 mt-1" id="kpi-free-budget">R$ 0,00</h3>
+          </div>
+          <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+            <i class="fa-solid fa-cart-shopping text-lg"></i>
+          </div>
+        </div>
+        <div class="mt-4 text-xs text-slate-400">
+          Disponível após pagar contas e guardar economias
+        </div>
+      </div>
+
     </div>
 
-    <!-- Modal: Adicionar/Editar Despesa -->
-    <div id="modal-expense" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-fade-in">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-                <h3 class="font-bold text-white text-base" id="modal-expense-title">Adicionar Nova Despesa</h3>
-                <button onclick="closeExpenseModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            
-            <form id="form-expense" onsubmit="saveExpense(event)" class="space-y-4">
-                <input type="hidden" id="expense-id">
-                
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Descrição / Nome da Conta</label>
-                    <input type="text" id="expense-name" required placeholder="Ex: Aluguel, Supermercado, Netflix" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-rose-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Valor (R$)</label>
-                    <input type="number" id="expense-amount" step="0.01" min="0.01" required placeholder="0,00" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-rose-500">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Categoria</label>
-                        <select id="expense-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-rose-500">
-                            <option value="Moradia">🏠 Moradia</option>
-                            <option value="Alimentação">🛒 Alimentação</option>
-                            <option value="Transporte">🚗 Transporte</option>
-                            <option value="Lazer">🎉 Lazer</option>
-                            <option value="Saúde">💊 Saúde</option>
-                            <option value="Outros">📌 Outros</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Custo</label>
-                        <select id="expense-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-rose-500">
-                            <option value="Fixa">Fixo (Essencial)</option>
-                            <option value="Variável">Variável</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeExpenseModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-300 hover:bg-slate-600 text-xs">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium hover:bg-rose-500 text-xs">Salvar Despesa</button>
-                </div>
-            </form>
-        </div>
+    <!-- Alertas & Diagnóstico de Orçamento -->
+    <div id="budget-health-alert" class="hidden p-4 rounded-xl border flex items-start gap-3">
+      <i id="budget-health-icon" class="text-xl mt-0.5"></i>
+      <div>
+        <h4 id="budget-health-title" class="font-bold text-sm"></h4>
+        <p id="budget-health-msg" class="text-xs mt-1 leading-relaxed text-slate-300"></p>
+      </div>
     </div>
 
-    <script>
-        // --- Estado da Aplicação (Store) ---
-        const DEFAULT_DATA = {
-            income: 5500.00,
-            reservaConfig: {
-                type: 'percent', // 'percent', 'months', 'fixed'
-                value: 10 // 10%
-            },
-            goals: [
-                { id: '1', name: 'Trocar de Carro', total: 45000, months: 36, currentSaved: 5000, icon: 'fa-car' },
-                { id: '2', name: 'Viagem de Férias', total: 8000, months: 10, currentSaved: 2000, icon: 'fa-plane' }
+    <!-- Formulários Principais (Entradas, Contas, Reserva, Metas) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- Coluna 1: Entradas e Contas Fixas -->
+      <div class="space-y-6">
+        
+        <!-- Bloco Renda -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle text-emerald-400"></i>
+            <h2 class="text-lg font-bold">1. Renda Mensal</h2>
+          </div>
+          <form id="income-form" class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Qual é seu ganho total no mês? (R$)</label>
+              <input type="number" id="income-input" step="0.01" placeholder="Ex: 4000.00" required 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm">
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2">
+              <i class="fa-solid fa-floppy-disk"></i> Atualizar Renda
+            </button>
+          </form>
+        </div>
+
+        <!-- Bloco Lançar Despesas -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-rose-400"></i>
+            <h2 class="text-lg font-bold">2. Contas e Gastos Fixos</h2>
+          </div>
+          <form id="expense-form" class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Descrição da Conta</label>
+              <input type="text" id="expense-name" placeholder="Ex: Aluguel, Luz, Mercado, Financiamento" required 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Valor (R$)</label>
+              <input type="number" id="expense-amount" step="0.01" placeholder="Ex: 1200.00" required 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-sm">
+            </div>
+            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-rose-400 font-medium py-2.5 rounded-xl border border-rose-500/20 transition text-sm flex items-center justify-center gap-2">
+              <i class="fa-solid fa-plus"></i> Adicionar Conta
+            </button>
+          </form>
+
+          <!-- Lista de Contas -->
+          <div class="pt-2">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase mb-3">Lista de Contas do Mês</h3>
+            <ul id="expense-list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <!-- Renderizado via Javascript -->
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Coluna 2: Reserva de Emergência e Metas -->
+      <div class="space-y-6">
+
+        <!-- Configuração da Reserva de Emergência -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-heart text-sky-400"></i>
+            <h2 class="text-lg font-bold">3. Reserva de Emergência</h2>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Recomenda-se guardar entre 3 a 6 meses do valor das suas contas essenciais para imprevistos.
+          </p>
+
+          <form id="reserve-form" class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Meses de Cobertura</label>
+                <select id="reserve-months" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-sm">
+                  <option value="3">3 Meses</option>
+                  <option value="6" selected>6 Meses</option>
+                  <option value="12">12 Meses</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Já tenho guardado (R$)</label>
+                <input type="number" id="reserve-current" step="0.01" placeholder="0.00" 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Prazo desejado p/ criar a reserva (Meses)</label>
+              <input type="number" id="reserve-target-months" min="1" value="12" placeholder="Ex: 12 meses" 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-sky-500 text-sm">
+            </div>
+            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-sky-400 font-medium py-2 rounded-xl border border-sky-500/20 transition text-sm">
+              Atualizar Configuração da Reserva
+            </button>
+          </form>
+
+          <!-- Status da Reserva -->
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Meta Total de Reserva:</span>
+              <span class="font-bold text-slate-200" id="reserve-target-val">R$ 0,00</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Aporte Mensal Recomendado:</span>
+              <span class="font-bold text-sky-400" id="reserve-monthly-val">R$ 0,00 /mês</span>
+            </div>
+            <!-- Barra de Progresso -->
+            <div class="w-full bg-slate-800 rounded-full h-2 mt-2">
+              <div id="reserve-progress-bar" class="bg-sky-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cadastro de Metas (Carro, Casa, Viagem, etc) -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-bullseye text-amber-400"></i>
+            <h2 class="text-lg font-bold">4. Suas Metas (Carro, Casa, etc.)</h2>
+          </div>
+          <form id="goal-form" class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Nome da Meta</label>
+              <input type="text" id="goal-name" placeholder="Ex: Comprar Carro, Entrada da Casa, Viagem" required 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-amber-500 text-sm">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Valor Total (R$)</label>
+                <input type="number" id="goal-target" step="0.01" placeholder="Ex: 30000.00" required 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Prazo (Meses)</label>
+                <input type="number" id="goal-months" min="1" placeholder="Ex: 24" required 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Já acumulou quanto p/ essa meta? (R$)</label>
+              <input type="number" id="goal-current" step="0.01" placeholder="0.00" value="0" 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-amber-500 text-sm">
+            </div>
+            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 font-medium py-2.5 rounded-xl border border-amber-500/20 transition text-sm flex items-center justify-center gap-2">
+              <i class="fa-solid fa-plus"></i> Adicionar Meta
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Coluna 3: Visão de Metas & Resumo Visual -->
+      <div class="space-y-6">
+
+        <!-- Lista de Metas Ativas -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-bold flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-amber-400"></i> Metas Cadastradas
+            </h3>
+          </div>
+          <div id="goals-list" class="space-y-4 max-h-[340px] overflow-y-auto pr-1">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
+
+        <!-- Gráfico do Orçamento do Mês -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <h3 class="text-base font-bold flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-emerald-400"></i> Distribuição da Sua Renda
+          </h3>
+          <div class="relative w-full h-52 flex items-center justify-center">
+            <canvas id="budgetChart"></canvas>
+          </div>
+          <div class="text-[11px] text-slate-400 text-center">
+            Visualização de onde cada real da sua renda está sendo direcionado.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-4 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+      Planejamento Financeiro Pessoal &bull; Todos os seus dados ficam salvos com segurança no seu navegador.
+    </div>
+  </footer>
+
+  <!-- Script da Aplicação -->
+  <script>
+    // System State
+    let appData = {
+      income: 0,
+      expenses: [],
+      reserve: {
+        monthsCoverage: 6,
+        currentSaved: 0,
+        targetMonthsToBuild: 12
+      },
+      goals: []
+    };
+
+    let budgetChart = null;
+
+    // Load LocalStorage on start
+    function init() {
+      const saved = localStorage.getItem('finances_planner_data');
+      if (saved) {
+        try {
+          appData = JSON.parse(saved);
+        } catch (e) {
+          console.error('Erro ao carregar dados salvos', e);
+        }
+      }
+      
+      // Populate Form inputs
+      document.getElementById('income-input').value = appData.income || '';
+      document.getElementById('reserve-months').value = appData.reserve.monthsCoverage || 6;
+      document.getElementById('reserve-current').value = appData.reserve.currentSaved || 0;
+      document.getElementById('reserve-target-months').value = appData.reserve.targetMonthsToBuild || 12;
+
+      render();
+    }
+
+    // Save state
+    function saveData() {
+      localStorage.setItem('finances_planner_data', JSON.stringify(appData));
+      render();
+    }
+
+    // Helper Format Currency
+    function formatBRL(val) {
+      return (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // Handlers
+    document.getElementById('income-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = parseFloat(document.getElementById('income-input').value) || 0;
+      appData.income = val;
+      saveData();
+    });
+
+    document.getElementById('expense-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('expense-name').value.trim();
+      const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+      if (name && amount > 0) {
+        appData.expenses.push({ id: Date.now(), name, amount });
+        document.getElementById('expense-name').value = '';
+        document.getElementById('expense-amount').value = '';
+        saveData();
+      }
+    });
+
+    document.getElementById('reserve-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      appData.reserve.monthsCoverage = parseInt(document.getElementById('reserve-months').value) || 6;
+      appData.reserve.currentSaved = parseFloat(document.getElementById('reserve-current').value) || 0;
+      appData.reserve.targetMonthsToBuild = parseInt(document.getElementById('reserve-target-months').value) || 12;
+      saveData();
+    });
+
+    document.getElementById('goal-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('goal-name').value.trim();
+      const target = parseFloat(document.getElementById('goal-target').value) || 0;
+      const months = parseInt(document.getElementById('goal-months').value) || 1;
+      const current = parseFloat(document.getElementById('goal-current').value) || 0;
+
+      if (name && target > 0 && months > 0) {
+        appData.goals.push({ id: Date.now(), name, target, months, current });
+        document.getElementById('goal-name').value = '';
+        document.getElementById('goal-target').value = '';
+        document.getElementById('goal-months').value = '';
+        document.getElementById('goal-current').value = '0';
+        saveData();
+      }
+    });
+
+    function deleteExpense(id) {
+      appData.expenses = appData.expenses.filter(item => item.id !== id);
+      saveData();
+    }
+
+    function deleteGoal(id) {
+      appData.goals = appData.goals.filter(item => item.id !== id);
+      saveData();
+    }
+
+    // Calculations & Main Render function
+    function render() {
+      // Total Expenses
+      const totalExpenses = appData.expenses.reduce((acc, item) => acc + item.amount, 0);
+
+      // Reserve calculations
+      const reserveTargetTotal = totalExpenses * appData.reserve.monthsCoverage;
+      const reserveRemaining = Math.max(0, reserveTargetTotal - appData.reserve.currentSaved);
+      const reserveMonthlyAporte = appData.reserve.targetMonthsToBuild > 0 
+        ? reserveRemaining / appData.reserve.targetMonthsToBuild 
+        : 0;
+
+      // Goals monthly calculation
+      let goalsMonthlyTotal = 0;
+      appData.goals.forEach(goal => {
+        const remaining = Math.max(0, goal.target - goal.current);
+        const monthly = goal.months > 0 ? remaining / goal.months : 0;
+        goalsMonthlyTotal += monthly;
+      });
+
+      // Savings Needed (Reserve Monthly + Goals Monthly)
+      const totalSavingsNeeded = reserveMonthlyAporte + goalsMonthlyTotal;
+
+      // Free spending budget
+      const freeBudget = appData.income - totalExpenses - totalSavingsNeeded;
+
+      // Render Dashboard Top KPIs
+      document.getElementById('kpi-income').innerText = formatBRL(appData.income);
+      document.getElementById('kpi-expenses').innerText = formatBRL(totalExpenses);
+      document.getElementById('kpi-savings-needed').innerText = formatBRL(totalSavingsNeeded);
+      document.getElementById('kpi-free-budget').innerText = formatBRL(freeBudget);
+
+      const expRatio = appData.income > 0 ? ((totalExpenses / appData.income) * 100).toFixed(1) : 0;
+      document.getElementById('kpi-expenses-ratio').innerText = `${expRatio}% da sua renda comprometida em contas`;
+
+      // Render Expense List
+      const expenseListEl = document.getElementById('expense-list');
+      expenseListEl.innerHTML = '';
+      if (appData.expenses.length === 0) {
+        expenseListEl.innerHTML = `<li class="text-xs text-slate-500 py-2 text-center">Nenhuma conta cadastrada ainda.</li>`;
+      } else {
+        appData.expenses.forEach(exp => {
+          const li = document.createElement('li');
+          li.className = 'flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800/80 text-xs';
+          li.innerHTML = `
+            <div class="truncate max-w-[150px]">
+              <span class="font-medium text-slate-200">${exp.name}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-rose-400">${formatBRL(exp.amount)}</span>
+              <button onclick="deleteExpense(${exp.id})" class="text-slate-500 hover:text-rose-400 transition ml-1">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          `;
+          expenseListEl.appendChild(li);
+        });
+      }
+
+      // Render Reserve status
+      document.getElementById('reserve-target-val').innerText = formatBRL(reserveTargetTotal);
+      document.getElementById('reserve-monthly-val').innerText = `${formatBRL(reserveMonthlyAporte)}/mês`;
+      const reservePct = reserveTargetTotal > 0 ? Math.min(100, (appData.reserve.currentSaved / reserveTargetTotal) * 100) : 0;
+      document.getElementById('reserve-progress-bar').style.width = `${reservePct}%`;
+
+      // Render Goals List
+      const goalsListEl = document.getElementById('goals-list');
+      goalsListEl.innerHTML = '';
+      if (appData.goals.length === 0) {
+        goalsListEl.innerHTML = `<div class="text-xs text-slate-500 text-center py-4">Nenhuma meta cadastrada ainda. Adicione uma meta como um carro ou casa!</div>`;
+      } else {
+        appData.goals.forEach(goal => {
+          const remaining = Math.max(0, goal.target - goal.current);
+          const monthly = goal.months > 0 ? remaining / goal.months : 0;
+          const pct = Math.min(100, (goal.current / goal.target) * 100);
+
+          const card = document.createElement('div');
+          card.className = 'bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2';
+          card.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="font-bold text-sm text-slate-100">${goal.name}</h4>
+                <p class="text-xs text-slate-400 mt-0.5">Prazo: ${goal.months} meses restantes</p>
+              </div>
+              <button onclick="deleteGoal(${goal.id})" class="text-slate-500 hover:text-rose-400 text-xs">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+            <div class="flex justify-between text-xs pt-1">
+              <span class="text-slate-400">Meta: <strong class="text-slate-200">${formatBRL(goal.target)}</strong></span>
+              <span class="text-amber-400 font-bold">Aporte: ${formatBRL(monthly)}/mês</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 mt-1">
+              <div class="bg-amber-400 h-2 rounded-full" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-500">
+              <span>Acumulado: ${formatBRL(goal.current)}</span>
+              <span>${pct.toFixed(0)}% concluído</span>
+            </div>
+          `;
+          goalsListEl.appendChild(card);
+        });
+      }
+
+      // Render Budget Health Alert Message
+      const alertBox = document.getElementById('budget-health-alert');
+      const alertIcon = document.getElementById('budget-health-icon');
+      const alertTitle = document.getElementById('budget-health-title');
+      const alertMsg = document.getElementById('budget-health-msg');
+
+      if (appData.income === 0) {
+        alertBox.className = "p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-200 flex items-start gap-3";
+        alertIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg mt-0.5";
+        alertTitle.innerText = "Informe sua renda mensal";
+        alertMsg.innerText = "Para que possamos calcular quanto você pode gastar e quanto precisa guardar todo mês, informe seu ganho no passo 1.";
+        alertBox.classList.remove('hidden');
+      } else if (freeBudget < 0) {
+        alertBox.className = "p-4 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-200 flex items-start gap-3";
+        alertIcon.className = "fa-solid fa-circle-exclamation text-rose-400 text-lg mt-0.5";
+        alertTitle.innerText = "Atenção: Suas economias e contas superam sua renda!";
+        alertMsg.innerText = `Você está com um déficit de ${formatBRL(Math.abs(freeBudget))}. Para conseguir manter todas as suas metas e contas, considere aumentar os prazos das metas ou renegociar despesas fixas.`;
+        alertBox.classList.remove('hidden');
+      } else {
+        alertBox.className = "p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-200 flex items-start gap-3";
+        alertIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg mt-0.5";
+        alertTitle.innerText = "Orçamento saúdavel!";
+        alertMsg.innerText = `Após pagar todas as contas (${formatBRL(totalExpenses)}) e separar a reserva/metas (${formatBRL(totalSavingsNeeded)}), você ainda tem ${formatBRL(freeBudget)} livres por mês para gastar como quiser com lazer e estilo de vida.`;
+        alertBox.classList.remove('hidden');
+      }
+
+      // Render Chart
+      renderChart(totalExpenses, totalSavingsNeeded, Math.max(0, freeBudget));
+    }
+
+    // Chart.js render helper
+    function renderChart(expenses, savings, free) {
+      const ctx = document.getElementById('budgetChart').getContext('2d');
+      
+      if (budgetChart) {
+        budgetChart.destroy();
+      }
+
+      budgetChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Contas Fixas', 'Reserva & Metas', 'Gastos Livres'],
+          datasets: [{
+            data: [expenses, savings, free],
+            backgroundColor: [
+              '#f43f5e', // Rose 500
+              '#38bdf8', // Sky 400
+              '#fbbf24'  // Amber 400
             ],
-            expenses: [
-                { id: '101', name: 'Aluguel / Condomínio', amount: 1500.00, category: 'Moradia', type: 'Fixa' },
-                { id: '102', name: 'Supermercado', amount: 900.00, category: 'Alimentação', type: 'Variável' },
-                { id: '103', name: 'Conta de Luz e Água', amount: 280.00, category: 'Moradia', type: 'Fixa' },
-                { id: '104', name: 'Internet e Celular', amount: 160.00, category: 'Moradia', type: 'Fixa' },
-                { id: '105', name: 'Combustível', amount: 400.00, category: 'Transporte', type: 'Variável' }
-            ]
-        };
-
-        let appData = loadData();
-        let chartInstance = null;
-
-        // --- Helpers de Formatação ---
-        function formatBRL(val) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-        }
-
-        function loadData() {
-            const saved = localStorage.getItem('finanplan_data');
-            if (saved) {
-                try { return JSON.parse(saved); } catch(e) { console.error(e); }
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#94a3b8',
+                font: { size: 11 }
+              }
             }
-            return JSON.parse(JSON.stringify(DEFAULT_DATA));
+          },
+          cutout: '70%'
         }
+      });
+    }
 
-        function saveData() {
-            localStorage.setItem('finanplan_data', JSON.stringify(appData));
-            updateAppUI();
-        }
-
-        function resetDataPrompt() {
-            if (confirm("Deseja restaurar os dados iniciais de demonstração? Seus dados inseridos serão resetados.")) {
-                appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-                saveData();
-            }
-        }
-
-        // --- Motor de Cálculos Financeiros ---
-        function calculateMetrics() {
-            const income = appData.income || 0;
-
-            // 1. Total para Metas Mensais
-            const totalMetasMensal = appData.goals.reduce((acc, goal) => {
-                const mensal = goal.total / (goal.months || 1);
-                return acc + mensal;
-            }, 0);
-
-            // 2. Custos Fixos Totais (para cálculo de fundo de emergência se necessário)
-            const custosFixos = appData.expenses
-                .filter(e => e.type === 'Fixa')
-                .reduce((acc, e) => acc + e.amount, 0);
-
-            // 3. Cálculo da Reserva de Emergência
-            let reservaMensal = 0;
-            let reservaFundoAlvo = custosFixos * 6; // Meta recomendada de 6 meses de custos fixos
-
-            if (appData.reservaConfig.type === 'percent') {
-                reservaMensal = income * (appData.reservaConfig.value / 100);
-            } else if (appData.reservaConfig.type === 'fixed') {
-                reservaMensal = appData.reservaConfig.value;
-            } else if (appData.reservaConfig.type === 'months') {
-                // Quer atingir a reserva em X meses
-                const mesesMeta = appData.reservaConfig.value || 12;
-                reservaMensal = reservaFundoAlvo / mesesMeta;
-            }
-
-            // 4. Teto Recomendado para Gastos
-            const tetoGastos = Math.max(0, income - (totalMetasMensal + reservaMensal));
-
-            // 5. Total de Gastos Cadastrados
-            const totalGastos = appData.expenses.reduce((acc, e) => acc + e.amount, 0);
-
-            // 6. Saldo Livre Restante no Mês
-            const saldoLivre = income - (totalMetasMensal + reservaMensal + totalGastos);
-
-            return {
-                income,
-                totalMetasMensal,
-                reservaMensal,
-                reservaFundoAlvo,
-                tetoGastos,
-                totalGastos,
-                saldoLivre,
-                custosFixos
-            };
-        }
-
-        // --- Atualização Completa da Interface ---
-        function updateAppUI() {
-            const metrics = calculateMetrics();
-
-            // Sincronizar inputs principais
-            document.getElementById('input-renda').value = appData.income || '';
-            document.getElementById('select-reserva-tipo').value = appData.reservaConfig.type;
-            document.getElementById('input-reserva-val').value = appData.reservaConfig.value;
-
-            // Rótulo dinâmico da reserva
-            const reservaLabel = document.getElementById('reserva-label');
-            if (appData.reservaConfig.type === 'percent') reservaLabel.textContent = 'Porcentagem da Renda (%)';
-            else if (appData.reservaConfig.type === 'fixed') reservaLabel.textContent = 'Valor Mensal Fixo (R$)';
-            else reservaLabel.textContent = 'Prazo em Meses para Acumular';
-
-            // Atualizar KPIs
-            document.getElementById('kpi-renda').textContent = formatBRL(metrics.income);
-            document.getElementById('kpi-metas').textContent = formatBRL(metrics.totalMetasMensal);
-            document.getElementById('kpi-reserva').textContent = formatBRL(metrics.reservaMensal);
-            document.getElementById('kpi-teto').textContent = formatBRL(metrics.tetoGastos);
-            document.getElementById('kpi-gastos').textContent = formatBRL(metrics.totalGastos);
-            document.getElementById('kpi-saldo').textContent = formatBRL(metrics.saldoLivre);
-
-            document.getElementById('reserva-mensal-calc').textContent = formatBRL(metrics.reservaMensal);
-            document.getElementById('reserva-fundo-alvo').textContent = formatBRL(metrics.reservaFundoAlvo);
-
-            // Atualizar Alertas Inteligentes
-            updateAlerts(metrics);
-
-            // Atualizar Renderização das Listas
-            renderGoalsList();
-            renderExpensesList();
-
-            // Atualizar Gráfico
-            renderChart(metrics);
-        }
-
-        function updateAlerts(metrics) {
-            const banner = document.getElementById('alert-banner');
-            const icon = document.getElementById('alert-icon');
-            const title = document.getElementById('alert-title');
-            const desc = document.getElementById('alert-desc');
-
-            if (metrics.income <= 0) {
-                banner.className = "rounded-xl p-4 border bg-amber-500/10 border-amber-500/30 text-amber-300 flex items-start gap-3";
-                icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
-                title.textContent = "Defina sua Renda Mensal";
-                desc.textContent = "Insira o valor total dos seus ganhos mensais para liberar o planejamento do teto de gastos.";
-            } else if (metrics.totalGastos > metrics.tetoGastos) {
-                const excesso = metrics.totalGastos - metrics.tetoGastos;
-                banner.className = "rounded-xl p-4 border bg-rose-500/10 border-rose-500/30 text-rose-300 flex items-start gap-3";
-                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                title.textContent = "Atenção: Você ultrapassou o teto de gastos recomendado!";
-                desc.textContent = `Suas despesas cadastradas somam ${formatBRL(metrics.totalGastos)}, o que supera em ${formatBRL(excesso)} o limite disponível de ${formatBRL(metrics.tetoGastos)} para manter suas metas e reservas intactas.`;
-            } else if (metrics.saldoLivre < 0) {
-                banner.className = "rounded-xl p-4 border bg-rose-500/10 border-rose-500/30 text-rose-300 flex items-start gap-3";
-                icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
-                title.textContent = "Orçamento no Vermelho";
-                desc.textContent = `Suas metas, reserva e gastos combinados superam seus ganhos em ${formatBRL(Math.abs(metrics.saldoLivre))}. Tente ajustar prazos ou despesas.`;
-            } else {
-                banner.className = "rounded-xl p-4 border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-start gap-3";
-                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-                title.textContent = "Planejamento Financeiro Saudável!";
-                desc.textContent = `Parabéns! Suas contas cabem no teto recomendado e você tem ${formatBRL(metrics.saldoLivre)} de saldo livre sobrando este mês.`;
-            }
-
-            banner.classList.remove('hidden');
-        }
-
-        function renderGoalsList() {
-            const container = document.getElementById('goals-container');
-            container.innerHTML = '';
-
-            if (appData.goals.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-8 text-slate-500 text-xs">
-                        Nenhum objetivo cadastrado. Adicione metas como a compra de um carro, casa ou viagem!
-                    </div>
-                `;
-                return;
-            }
-
-            appData.goals.forEach(goal => {
-                const mensal = goal.total / (goal.months || 1);
-                const progressPct = Math.min(100, Math.round(((goal.currentSaved || 0) / goal.total) * 100));
-
-                const card = document.createElement('div');
-                card.className = "bg-slate-900/70 border border-slate-700/60 rounded-xl p-4 relative flex flex-col justify-between hover:border-cyan-500/40 transition-colors";
-                card.innerHTML = `
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm">
-                                    <i class="fa-solid ${goal.icon || 'fa-gem'}"></i>
-                                </div>
-                                <h4 class="font-bold text-white text-sm">${goal.name}</h4>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <button onclick="editGoal('${goal.id}')" class="text-slate-400 hover:text-cyan-400 p-1 text-xs"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="deleteGoal('${goal.id}')" class="text-slate-400 hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-
-                        <div class="space-y-1 mt-3">
-                            <div class="flex justify-between text-xs">
-                                <span class="text-slate-400">Reserva Mensal:</span>
-                                <span class="font-bold text-cyan-400">${formatBRL(mensal)}/mês</span>
-                            </div>
-                            <div class="flex justify-between text-xs">
-                                <span class="text-slate-400">Valor Alvo:</span>
-                                <span class="text-slate-200 font-medium">${formatBRL(goal.total)} (${goal.months} meses)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 pt-3 border-t border-slate-800">
-                        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-                            <span>Progresso Acumulado</span>
-                            <span>${progressPct}% (${formatBRL(goal.currentSaved || 0)})</span>
-                        </div>
-                        <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                            <div class="bg-cyan-500 h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderExpensesList() {
-            const tbody = document.getElementById('expenses-table-body');
-            const emptyMsg = document.getElementById('expenses-empty');
-            tbody.innerHTML = '';
-
-            if (appData.expenses.length === 0) {
-                emptyMsg.classList.remove('hidden');
-                return;
-            }
-            emptyMsg.classList.add('hidden');
-
-            appData.expenses.forEach(exp => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-700/20 transition-colors";
-                tr.innerHTML = `
-                    <td class="py-3 px-4 font-medium text-white">${exp.name}</td>
-                    <td class="py-3 px-4">
-                        <span class="px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
-                            ${exp.category}
-                        </span>
-                    </td>
-                    <td class="py-3 px-4">
-                        <span class="text-xs ${exp.type === 'Fixa' ? 'text-amber-400' : 'text-slate-400'}">
-                            ${exp.type}
-                        </span>
-                    </td>
-                    <td class="py-3 px-4 text-right font-semibold text-rose-400">${formatBRL(exp.amount)}</td>
-                    <td class="py-3 px-4 text-center">
-                        <button onclick="editExpense('${exp.id}')" class="text-slate-400 hover:text-cyan-400 p-1 mr-1 text-xs"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteExpense('${exp.id}')" class="text-slate-400 hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderChart(metrics) {
-            const ctx = document.getElementById('chart-orcamento').getContext('2d');
-
-            const metas = metrics.totalMetasMensal;
-            const reserva = metrics.reservaMensal;
-            const gastos = metrics.totalGastos;
-            const livre = Math.max(0, metrics.saldoLivre);
-            const total = metrics.income || (metas + reserva + gastos + livre) || 1;
-
-            // Porcentagens
-            document.getElementById('pct-metas').textContent = Math.round((metas / total) * 100) + '%';
-            document.getElementById('pct-reserva').textContent = Math.round((reserva / total) * 100) + '%';
-            document.getElementById('pct-gastos').textContent = Math.round((gastos / total) * 100) + '%';
-            document.getElementById('pct-livre').textContent = Math.round((livre / total) * 100) + '%';
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Metas', 'Reserva', 'Despesas', 'Saldo Livre'],
-                    datasets: [{
-                        data: [metas, reserva, gastos, livre],
-                        backgroundColor: [
-                            '#06b6d4', // cyan-500
-                            '#6366f1', // indigo-500
-                            '#f43f5e', // rose-500
-                            '#10b981'  // emerald-500
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#1e293b'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ` ${context.label}: ${formatBRL(context.raw)}`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: '70%'
-                }
-            });
-        }
-
-        // --- Event Listeners dos Inputs de Renda e Reserva ---
-        document.getElementById('input-renda').addEventListener('input', (e) => {
-            appData.income = parseFloat(e.target.value) || 0;
-            saveData();
-        });
-
-        document.getElementById('select-reserva-tipo').addEventListener('change', (e) => {
-            appData.reservaConfig.type = e.target.value;
-            saveData();
-        });
-
-        document.getElementById('input-reserva-val').addEventListener('input', (e) => {
-            appData.reservaConfig.value = parseFloat(e.target.value) || 0;
-            saveData();
-        });
-
-        // --- Modais & CRUD de Metas ---
-        function openGoalModal(id = null) {
-            document.getElementById('modal-goal').classList.remove('hidden');
-            const form = document.getElementById('form-goal');
-            form.reset();
-
-            if (id) {
-                const goal = appData.goals.find(g => g.id === id);
-                if (goal) {
-                    document.getElementById('modal-goal-title').textContent = "Editar Meta";
-                    document.getElementById('goal-id').value = goal.id;
-                    document.getElementById('goal-name').value = goal.name;
-                    document.getElementById('goal-total').value = goal.total;
-                    document.getElementById('goal-months').value = goal.months;
-                    document.getElementById('goal-icon').value = goal.icon || 'fa-gem';
-                }
-            } else {
-                document.getElementById('modal-goal-title').textContent = "Nova Meta / Objetivo";
-                document.getElementById('goal-id').value = '';
-            }
-            updateGoalPreview();
-        }
-
-        function closeGoalModal() {
-            document.getElementById('modal-goal').classList.add('hidden');
-        }
-
-        function updateGoalPreview() {
-            const total = parseFloat(document.getElementById('goal-total').value) || 0;
-            const months = parseInt(document.getElementById('goal-months').value) || 1;
-            const mensal = total / Math.max(1, months);
-            document.getElementById('goal-preview-calc').textContent = `${formatBRL(mensal)} / mês`;
-        }
-
-        document.getElementById('goal-total').addEventListener('input', updateGoalPreview);
-        document.getElementById('goal-months').addEventListener('input', updateGoalPreview);
-
-        function saveGoal(e) {
-            e.preventDefault();
-            const id = document.getElementById('goal-id').value;
-            const name = document.getElementById('goal-name').value;
-            const total = parseFloat(document.getElementById('goal-total').value) || 0;
-            const months = parseInt(document.getElementById('goal-months').value) || 1;
-            const icon = document.getElementById('goal-icon').value;
-
-            if (id) {
-                const index = appData.goals.findIndex(g => g.id === id);
-                if (index !== -1) {
-                    appData.goals[index] = { ...appData.goals[index], name, total, months, icon };
-                }
-            } else {
-                appData.goals.push({
-                    id: Date.now().toString(),
-                    name,
-                    total,
-                    months,
-                    currentSaved: 0,
-                    icon
-                });
-            }
-
-            closeGoalModal();
-            saveData();
-        }
-
-        function editGoal(id) {
-            openGoalModal(id);
-        }
-
-        function deleteGoal(id) {
-            if (confirm("Tem certeza que deseja excluir esta meta?")) {
-                appData.goals = appData.goals.filter(g => g.id !== id);
-                saveData();
-            }
-        }
-
-        // --- Modais & CRUD de Despesas ---
-        function openExpenseModal(id = null) {
-            document.getElementById('modal-expense').classList.remove('hidden');
-            const form = document.getElementById('form-expense');
-            form.reset();
-
-            if (id) {
-                const exp = appData.expenses.find(e => e.id === id);
-                if (exp) {
-                    document.getElementById('modal-expense-title').textContent = "Editar Despesa";
-                    document.getElementById('expense-id').value = exp.id;
-                    document.getElementById('expense-name').value = exp.name;
-                    document.getElementById('expense-amount').value = exp.amount;
-                    document.getElementById('expense-category').value = exp.category;
-                    document.getElementById('expense-type').value = exp.type;
-                }
-            } else {
-                document.getElementById('modal-expense-title').textContent = "Adicionar Nova Despesa";
-                document.getElementById('expense-id').value = '';
-            }
-        }
-
-        function closeExpenseModal() {
-            document.getElementById('modal-expense').classList.add('hidden');
-        }
-
-        function saveExpense(e) {
-            e.preventDefault();
-            const id = document.getElementById('expense-id').value;
-            const name = document.getElementById('expense-name').value;
-            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
-            const category = document.getElementById('expense-category').value;
-            const type = document.getElementById('expense-type').value;
-
-            if (id) {
-                const index = appData.expenses.findIndex(e => e.id === id);
-                if (index !== -1) {
-                    appData.expenses[index] = { id, name, amount, category, type };
-                }
-            } else {
-                appData.expenses.push({
-                    id: Date.now().toString(),
-                    name,
-                    amount,
-                    category,
-                    type
-                });
-            }
-
-            closeExpenseModal();
-            saveData();
-        }
-
-        function editExpense(id) {
-            openExpenseModal(id);
-        }
-
-        function deleteExpense(id) {
-            if (confirm("Tem certeza que deseja remover esta despesa?")) {
-                appData.expenses = appData.expenses.filter(e => e.id !== id);
-                saveData();
-            }
-        }
-
-        // --- Inicialização da Aplicação ---
-        window.onload = function() {
-            updateAppUI();
-        };
-    </script>
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
 </html>
