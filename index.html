@@ -33,8 +33,63 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased">
 
+  <!-- Modal de Autenticação (Login / Cadastro) -->
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl max-w-md w-full space-y-6 shadow-2xl relative">
+      
+      <div class="text-center space-y-2">
+        <div class="inline-flex p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-400 mb-1">
+          <i class="fa-solid fa-lock text-2xl"></i>
+        </div>
+        <h2 id="auth-title" class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
+          Entrar na sua Conta
+        </h2>
+        <p id="auth-subtitle" class="text-xs text-slate-400">Digite seus dados para acessar seu planejamento financeiro</p>
+      </div>
+
+      <!-- Alerta de Erro de Auth -->
+      <div id="auth-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-center"></div>
+
+      <!-- Formulário de Auth -->
+      <form id="auth-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Seu E-mail</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+              <i class="fa-solid fa-envelope text-xs"></i>
+            </span>
+            <input type="email" id="auth-email" required placeholder="seuemail@exemplo.com"
+                   class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Sua Senha</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+              <i class="fa-solid fa-key text-xs"></i>
+            </span>
+            <input type="password" id="auth-password" required placeholder="••••••••"
+                   class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i> Entrar
+        </button>
+      </form>
+
+      <div class="text-center pt-2 border-t border-slate-800">
+        <button id="toggle-auth-mode" class="text-xs text-emerald-400 hover:underline">
+          Não tem uma conta? Crie uma agora
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Header / Navbar -->
-  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
       <div class="flex items-center gap-3">
         <div class="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
@@ -47,9 +102,16 @@
           <p class="text-xs text-slate-400">Controle financeiro e metas</p>
         </div>
       </div>
-      <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700/50">
-        <i class="fa-solid fa-shield-halved text-emerald-400"></i>
-        <span>Dados armazenados localmente</span>
+      
+      <!-- Usuário Logado e Sair -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400 bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700/50">
+          <i class="fa-solid fa-user-shield text-emerald-400"></i>
+          <span id="user-display-email">Protegido por Senha</span>
+        </div>
+        <button id="logout-btn" class="bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 px-3 py-1.5 rounded-lg border border-slate-700/50 text-xs transition flex items-center gap-1.5">
+          <i class="fa-solid fa-right-from-bracket"></i> Sair
+        </button>
       </div>
     </div>
   </header>
@@ -151,7 +213,7 @@
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Qual é seu ganho total no mês? (R$)</label>
               <input type="number" id="income-input" step="0.01" placeholder="Ex: 4000.00" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm">
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-500 text-sm">
             </div>
             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2">
               <i class="fa-solid fa-floppy-disk"></i> Atualizar Renda
@@ -169,12 +231,12 @@
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Descrição da Conta</label>
               <input type="text" id="expense-name" placeholder="Ex: Aluguel, Luz, Mercado, Financiamento" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-sm">
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-rose-500 text-sm">
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-400 mb-1">Valor (R$)</label>
               <input type="number" id="expense-amount" step="0.01" placeholder="Ex: 1200.00" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-sm">
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-rose-500 text-sm">
             </div>
             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-rose-400 font-medium py-2.5 rounded-xl border border-rose-500/20 transition text-sm flex items-center justify-center gap-2">
               <i class="fa-solid fa-plus"></i> Adicionar Conta
@@ -241,7 +303,6 @@
               <span class="text-slate-400">Aporte Mensal Recomendado:</span>
               <span class="font-bold text-sky-400" id="reserve-monthly-val">R$ 0,00 /mês</span>
             </div>
-            <!-- Barra de Progresso -->
             <div class="w-full bg-slate-800 rounded-full h-2 mt-2">
               <div id="reserve-progress-bar" class="bg-sky-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
@@ -322,13 +383,16 @@
   <!-- Footer -->
   <footer class="bg-slate-900 border-t border-slate-800 py-4 mt-auto">
     <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-      Planejamento Financeiro Pessoal &bull; Todos os seus dados ficam salvos com segurança no seu navegador.
+      Planejamento Financeiro Pessoal &bull; Protegido por Senha Local.
     </div>
   </footer>
 
   <!-- Script da Aplicação -->
   <script>
-    // System State
+    // State de Usuário Atual e Aplicativo
+    let currentUser = null;
+    let authMode = 'login'; // 'login' ou 'register'
+
     let appData = {
       income: 0,
       expenses: [],
@@ -342,18 +406,49 @@
 
     let budgetChart = null;
 
-    // Load LocalStorage on start
+    // Criptografia SHA-256 para senhas
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Inicialização da Aplicação
     function init() {
-      const saved = localStorage.getItem('finances_planner_data');
+      const sessionUser = sessionStorage.getItem('finances_session_user');
+      if (sessionUser) {
+        currentUser = sessionUser;
+        document.getElementById('auth-modal').classList.add('hidden');
+        document.getElementById('user-display-email').innerText = currentUser;
+        loadUserData();
+      } else {
+        document.getElementById('auth-modal').classList.remove('hidden');
+      }
+    }
+
+    // Carregar dados específicos do usuário logado
+    function loadUserData() {
+      if (!currentUser) return;
+      const saved = localStorage.getItem(`finances_data_${currentUser}`);
       if (saved) {
         try {
           appData = JSON.parse(saved);
         } catch (e) {
-          console.error('Erro ao carregar dados salvos', e);
+          console.error('Erro ao carregar dados do usuário', e);
         }
+      } else {
+        // Reset inicial para novo usuário
+        appData = {
+          income: 0,
+          expenses: [],
+          reserve: { monthsCoverage: 6, currentSaved: 0, targetMonthsToBuild: 12 },
+          goals: []
+        };
       }
       
-      // Populate Form inputs
+      // Preencher campos
       document.getElementById('income-input').value = appData.income || '';
       document.getElementById('reserve-months').value = appData.reserve.monthsCoverage || 6;
       document.getElementById('reserve-current').value = appData.reserve.currentSaved || 0;
@@ -362,18 +457,92 @@
       render();
     }
 
-    // Save state
+    // Salvar dados no perfil do usuário logado
     function saveData() {
-      localStorage.setItem('finances_planner_data', JSON.stringify(appData));
+      if (!currentUser) return;
+      localStorage.setItem(`finances_data_${currentUser}`, JSON.stringify(appData));
       render();
     }
+
+    // Handlers de Autenticação
+    document.getElementById('toggle-auth-mode').addEventListener('click', () => {
+      const errorEl = document.getElementById('auth-error');
+      errorEl.classList.add('hidden');
+      
+      if (authMode === 'login') {
+        authMode = 'register';
+        document.getElementById('auth-title').innerText = 'Criar Nova Conta';
+        document.getElementById('auth-subtitle').innerText = 'Crie seu e-mail e senha para salvar suas finanças com segurança';
+        document.getElementById('auth-submit-btn').innerHTML = '<i class="fa-solid fa-user-plus"></i> Cadastrar';
+        document.getElementById('toggle-auth-mode').innerText = 'Já tem uma conta? Faça login';
+      } else {
+        authMode = 'login';
+        document.getElementById('auth-title').innerText = 'Entrar na sua Conta';
+        document.getElementById('auth-subtitle').innerText = 'Digite seus dados para acessar seu planejamento financeiro';
+        document.getElementById('auth-submit-btn').innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
+        document.getElementById('toggle-auth-mode').innerText = 'Não tem uma conta? Crie uma agora';
+      }
+    });
+
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim().toLowerCase();
+      const password = document.getElementById('auth-password').value;
+      const errorEl = document.getElementById('auth-error');
+      
+      errorEl.classList.add('hidden');
+
+      if (!email || !password) return;
+
+      const passwordHash = await hashPassword(password);
+      const users = JSON.parse(localStorage.getItem('finances_users') || '{}');
+
+      if (authMode === 'register') {
+        if (users[email]) {
+          errorEl.innerText = 'Este e-mail já está cadastrado. Faça login.';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+        // Cadastrar usuário
+        users[email] = passwordHash;
+        localStorage.setItem('finances_users', JSON.stringify(users));
+        
+        currentUser = email;
+        sessionStorage.setItem('finances_session_user', currentUser);
+        document.getElementById('auth-modal').classList.add('hidden');
+        document.getElementById('user-display-email').innerText = currentUser;
+        loadUserData();
+
+      } else {
+        // Login
+        if (!users[email] || users[email] !== passwordHash) {
+          errorEl.innerText = 'E-mail ou senha incorretos.';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+
+        currentUser = email;
+        sessionStorage.setItem('finances_session_user', currentUser);
+        document.getElementById('auth-modal').classList.add('hidden');
+        document.getElementById('user-display-email').innerText = currentUser;
+        loadUserData();
+      }
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('finances_session_user');
+      currentUser = null;
+      document.getElementById('auth-password').value = '';
+      document.getElementById('auth-modal').classList.remove('hidden');
+    });
 
     // Helper Format Currency
     function formatBRL(val) {
       return (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Handlers
+    // Forms Handlers
     document.getElementById('income-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const val = parseFloat(document.getElementById('income-input').value) || 0;
@@ -428,19 +597,16 @@
       saveData();
     }
 
-    // Calculations & Main Render function
+    // Render principal
     function render() {
-      // Total Expenses
       const totalExpenses = appData.expenses.reduce((acc, item) => acc + item.amount, 0);
 
-      // Reserve calculations
       const reserveTargetTotal = totalExpenses * appData.reserve.monthsCoverage;
       const reserveRemaining = Math.max(0, reserveTargetTotal - appData.reserve.currentSaved);
       const reserveMonthlyAporte = appData.reserve.targetMonthsToBuild > 0 
         ? reserveRemaining / appData.reserve.targetMonthsToBuild 
         : 0;
 
-      // Goals monthly calculation
       let goalsMonthlyTotal = 0;
       appData.goals.forEach(goal => {
         const remaining = Math.max(0, goal.target - goal.current);
@@ -448,13 +614,9 @@
         goalsMonthlyTotal += monthly;
       });
 
-      // Savings Needed (Reserve Monthly + Goals Monthly)
       const totalSavingsNeeded = reserveMonthlyAporte + goalsMonthlyTotal;
-
-      // Free spending budget
       const freeBudget = appData.income - totalExpenses - totalSavingsNeeded;
 
-      // Render Dashboard Top KPIs
       document.getElementById('kpi-income').innerText = formatBRL(appData.income);
       document.getElementById('kpi-expenses').innerText = formatBRL(totalExpenses);
       document.getElementById('kpi-savings-needed').innerText = formatBRL(totalSavingsNeeded);
@@ -562,7 +724,7 @@
       renderChart(totalExpenses, totalSavingsNeeded, Math.max(0, freeBudget));
     }
 
-    // Chart.js render helper
+    // Chart.js
     function renderChart(expenses, savings, free) {
       const ctx = document.getElementById('budgetChart').getContext('2d');
       
@@ -577,9 +739,9 @@
           datasets: [{
             data: [expenses, savings, free],
             backgroundColor: [
-              '#f43f5e', // Rose 500
-              '#38bdf8', // Sky 400
-              '#fbbf24'  // Amber 400
+              '#f43f5e',
+              '#38bdf8',
+              '#fbbf24'
             ],
             borderWidth: 0
           }]
@@ -601,7 +763,7 @@
       });
     }
 
-    // Initialize Application
+    // Inicializar no carregamento do DOM
     window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
