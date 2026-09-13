@@ -1,1 +1,922 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador Financeiro & Metas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        darkbg: '#0f172a',
+                        darkcard: '#1e293b',
+                        darkborder: '#334155'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 pb-12">
 
+    <!-- Header -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-xl">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-white leading-none">FinanPlan</h1>
+                    <span class="text-xs text-slate-400">Planejador de Gastos e Objetivos</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="resetDataPrompt()" title="Restaurar dados padrão" class="text-xs px-3 py-1.5 rounded-lg border border-slate-600 hover:bg-slate-700 text-slate-300 transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span class="hidden sm:inline">Resetar Dados</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+
+        <!-- Resumo Principal (KPIs) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            
+            <!-- Renda -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>Renda Mensal</span>
+                    <i class="fa-solid fa-hand-holding-dollar text-emerald-400 text-base"></i>
+                </div>
+                <div class="text-xl lg:text-2xl font-bold text-white" id="kpi-renda">R$ 0,00</div>
+                <div class="text-[11px] text-slate-400 mt-1">Sua receita bruta cadastrada</div>
+            </div>
+
+            <!-- Reservas e Metas -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>Metas do Mês</span>
+                    <i class="fa-solid fa-bullseye text-cyan-400 text-base"></i>
+                </div>
+                <div class="text-xl lg:text-2xl font-bold text-cyan-400" id="kpi-metas">R$ 0,00</div>
+                <div class="text-[11px] text-slate-400 mt-1">Para metas de médio/longo prazo</div>
+            </div>
+
+            <!-- Reserva de Emergência -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>Reserva Emergência</span>
+                    <i class="fa-solid fa-shield-halved text-indigo-400 text-base"></i>
+                </div>
+                <div class="text-xl lg:text-2xl font-bold text-indigo-400" id="kpi-reserva">R$ 0,00</div>
+                <div class="text-[11px] text-slate-400 mt-1" id="kpi-reserva-sub">Depósito mensal sugerido</div>
+            </div>
+
+            <!-- Teto Máximo Recomendado -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-800/90">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>Teto de Gastos</span>
+                    <i class="fa-solid fa-gauge-high text-amber-400 text-base"></i>
+                </div>
+                <div class="text-xl lg:text-2xl font-bold text-amber-400" id="kpi-teto">R$ 0,00</div>
+                <div class="text-[11px] text-slate-400 mt-1">Limite seguro para despesas</div>
+            </div>
+
+            <!-- Gastos Atuais -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>Despesas Totais</span>
+                    <i class="fa-solid fa-arrow-trend-down text-rose-400 text-base"></i>
+                </div>
+                <div class="text-xl lg:text-2xl font-bold text-rose-400" id="kpi-gastos">R$ 0,00</div>
+                <div class="text-[11px] text-slate-400 mt-1" id="kpi-gastos-sub">Contas cadastradas</div>
+            </div>
+
+            <!-- Saldo Livre -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-sm relative overflow-hidden border-emerald-500/30">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>Saldo Sobrando</span>
+                    <i class="fa-solid fa-piggy-bank text-emerald-400 text-base"></i>
+                </div>
+                <div class="text-xl lg:text-2xl font-bold text-emerald-400" id="kpi-saldo">R$ 0,00</div>
+                <div class="text-[11px] text-slate-400 mt-1">Livre após tudo financiado</div>
+            </div>
+
+        </section>
+
+        <!-- Banner de Alertas Inteligentes -->
+        <div id="alert-banner" class="hidden rounded-xl p-4 border transition-all duration-300 flex items-start gap-3">
+            <div id="alert-icon" class="text-xl mt-0.5"></div>
+            <div class="flex-1">
+                <h4 id="alert-title" class="font-bold text-sm"></h4>
+                <p id="alert-desc" class="text-xs mt-0.5 opacity-90"></p>
+            </div>
+        </div>
+
+        <!-- Seção Principal de Painel / Gráficos & Renda -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Coluna Esquerda: Renda & Reserva Setup -->
+            <div class="space-y-6">
+                <!-- Card de Entrada da Renda -->
+                <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5">
+                    <h3 class="text-base font-semibold text-white flex items-center gap-2 mb-4">
+                        <i class="fa-solid fa-money-bill-wave text-emerald-400"></i>
+                        Ganhos Mensais
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Qual a sua renda mensal total?</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2.5 text-slate-400 font-semibold text-sm">R$</span>
+                                <input type="number" id="input-renda" step="0.01" min="0" placeholder="0,00" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 pl-10 pr-3 text-white font-bold focus:outline-none focus:border-emerald-500 text-lg">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Configuração da Reserva de Emergência -->
+                <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-shield-cat text-indigo-400"></i>
+                            Reserva de Emergência
+                        </h3>
+                        <span class="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Proteção</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Modo de Cálculo</label>
+                            <select id="select-reserva-tipo" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500">
+                                <option value="percent">% da Renda Mensal</option>
+                                <option value="months">Meses de Custo Fixo (Meta de Fundo)</option>
+                                <option value="fixed">Valor Fixo Mensal (R$)</option>
+                            </select>
+                        </div>
+
+                        <div id="reserva-val-container">
+                            <label id="reserva-label" class="block text-xs font-medium text-slate-300 mb-1">Porcentagem da Renda (%)</label>
+                            <input type="number" id="input-reserva-val" step="0.5" min="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <!-- Resumo do Fundo de Emergência -->
+                        <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-700/50 text-xs space-y-1.5">
+                            <div class="flex justify-between text-slate-300">
+                                <span>Alocação Mensal:</span>
+                                <span id="reserva-mensal-calc" class="font-semibold text-indigo-300">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Meta Total do Fundo (6 meses de gastos):</span>
+                                <span id="reserva-fundo-alvo" class="font-medium text-slate-200">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Central & Direita: Visão Gráfica -->
+            <div class="lg:col-span-2 bg-slate-800 border border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-semibold text-white flex items-center justify-between mb-2">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-cyan-400"></i>
+                            Distribuição da Renda & Orçamento
+                        </span>
+                        <span class="text-xs text-slate-400 font-normal">Recomendação Orçamentária</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">Veja visualmente para onde está indo o seu dinheiro este mês.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center my-auto">
+                    <!-- Gráfico Canvas -->
+                    <div class="relative h-56 flex items-center justify-center">
+                        <canvas id="chart-orcamento"></canvas>
+                    </div>
+
+                    <!-- Legendas e Estatísticas Adicionais -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/40">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-cyan-500"></span>
+                                <span class="text-slate-300">Metas & Sonhos</span>
+                            </div>
+                            <span id="pct-metas" class="font-bold text-slate-200">0%</span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/40">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+                                <span class="text-slate-300">Reserva Emergência</span>
+                            </div>
+                            <span id="pct-reserva" class="font-bold text-slate-200">0%</span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/40">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                                <span class="text-slate-300">Despesas Cadastradas</span>
+                            </div>
+                            <span id="pct-gastos" class="font-bold text-slate-200">0%</span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/40">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                <span class="text-slate-300">Saldo Livre (Sobra)</span>
+                            </div>
+                            <span id="pct-livre" class="font-bold text-slate-200">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Seção de Metas / Objetivos -->
+        <section class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-flag-checkered text-cyan-400"></i>
+                        Seus Objetivos & Conquistas (Carro, Casa, Viagens)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">O sistema separa o dinheiro necessário do seu mês antes de liberar o teto para despesas.</p>
+                </div>
+                <button onclick="openGoalModal()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Nova Meta
+                </button>
+            </div>
+
+            <!-- Lista de Metas em Cards -->
+            <div id="goals-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Inserido dinamicamente via JavaScript -->
+            </div>
+        </section>
+
+        <!-- Seção de Gerenciamento de Despesas -->
+        <section class="bg-slate-800 border border-slate-700/80 rounded-2xl p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-rose-400"></i>
+                        Contas & Despesas Mensais
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Cadastre suas despesas fixas e variáveis para ver se cabe no teto disponível.</p>
+                </div>
+                <button onclick="openExpenseModal()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Adicionar Despesa
+                </button>
+            </div>
+
+            <!-- Tabela de Despesas -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900/80 text-xs text-slate-400 uppercase border-b border-slate-700">
+                        <tr>
+                            <th class="py-3 px-4">Nome</th>
+                            <th class="py-3 px-4">Categoria</th>
+                            <th class="py-3 px-4">Tipo</th>
+                            <th class="py-3 px-4 text-right">Valor (R$)</th>
+                            <th class="py-3 px-4 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenses-table-body" class="divide-y divide-slate-700/50">
+                        <!-- Inserido via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="expenses-empty" class="hidden text-center py-8 text-slate-500 text-xs">
+                Nenhuma despesa cadastrada ainda. Clique no botão acima para adicionar.
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: Adicionar/Editar Meta -->
+    <div id="modal-goal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-fade-in">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base" id="modal-goal-title">Nova Meta / Objetivo</h3>
+                <button onclick="closeGoalModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <form id="form-goal" onsubmit="saveGoal(event)" class="space-y-4">
+                <input type="hidden" id="goal-id">
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Nome do Objetivo</label>
+                    <input type="text" id="goal-name" required placeholder="Ex: Entrada do Carro, Casa Própria, Viagem" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Valor Total Necessário (R$)</label>
+                    <input type="number" id="goal-total" step="0.01" min="1" required placeholder="50000,00" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-cyan-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Prazo (Em Meses)</label>
+                        <input type="number" id="goal-months" min="1" required placeholder="24" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Ícone</label>
+                        <select id="goal-icon" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-cyan-500">
+                            <option value="fa-car">🚗 Carro</option>
+                            <option value="fa-house">🏠 Casa</option>
+                            <option value="fa-plane">✈️ Viagem</option>
+                            <option value="fa-graduation-cap">🎓 Estudos</option>
+                            <option value="fa-laptop">💻 Tecnologia</option>
+                            <option value="fa-gem">💎 Outros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 text-xs">
+                    <span class="text-slate-400">Reserva Mensal Estimada:</span>
+                    <span id="goal-preview-calc" class="font-bold text-cyan-400 block text-sm mt-0.5">R$ 0,00 / mês</span>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeGoalModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-300 hover:bg-slate-600 text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-cyan-600 text-white font-medium hover:bg-cyan-500 text-xs">Salvar Meta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Adicionar/Editar Despesa -->
+    <div id="modal-expense" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-fade-in">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-base" id="modal-expense-title">Adicionar Nova Despesa</h3>
+                <button onclick="closeExpenseModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <form id="form-expense" onsubmit="saveExpense(event)" class="space-y-4">
+                <input type="hidden" id="expense-id">
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Descrição / Nome da Conta</label>
+                    <input type="text" id="expense-name" required placeholder="Ex: Aluguel, Supermercado, Netflix" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-rose-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Valor (R$)</label>
+                    <input type="number" id="expense-amount" step="0.01" min="0.01" required placeholder="0,00" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-rose-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Categoria</label>
+                        <select id="expense-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-rose-500">
+                            <option value="Moradia">🏠 Moradia</option>
+                            <option value="Alimentação">🛒 Alimentação</option>
+                            <option value="Transporte">🚗 Transporte</option>
+                            <option value="Lazer">🎉 Lazer</option>
+                            <option value="Saúde">💊 Saúde</option>
+                            <option value="Outros">📌 Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Custo</label>
+                        <select id="expense-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-rose-500">
+                            <option value="Fixa">Fixo (Essencial)</option>
+                            <option value="Variável">Variável</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeExpenseModal()" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-300 hover:bg-slate-600 text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white font-medium hover:bg-rose-500 text-xs">Salvar Despesa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- Estado da Aplicação (Store) ---
+        const DEFAULT_DATA = {
+            income: 5500.00,
+            reservaConfig: {
+                type: 'percent', // 'percent', 'months', 'fixed'
+                value: 10 // 10%
+            },
+            goals: [
+                { id: '1', name: 'Trocar de Carro', total: 45000, months: 36, currentSaved: 5000, icon: 'fa-car' },
+                { id: '2', name: 'Viagem de Férias', total: 8000, months: 10, currentSaved: 2000, icon: 'fa-plane' }
+            ],
+            expenses: [
+                { id: '101', name: 'Aluguel / Condomínio', amount: 1500.00, category: 'Moradia', type: 'Fixa' },
+                { id: '102', name: 'Supermercado', amount: 900.00, category: 'Alimentação', type: 'Variável' },
+                { id: '103', name: 'Conta de Luz e Água', amount: 280.00, category: 'Moradia', type: 'Fixa' },
+                { id: '104', name: 'Internet e Celular', amount: 160.00, category: 'Moradia', type: 'Fixa' },
+                { id: '105', name: 'Combustível', amount: 400.00, category: 'Transporte', type: 'Variável' }
+            ]
+        };
+
+        let appData = loadData();
+        let chartInstance = null;
+
+        // --- Helpers de Formatação ---
+        function formatBRL(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('finanplan_data');
+            if (saved) {
+                try { return JSON.parse(saved); } catch(e) { console.error(e); }
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_DATA));
+        }
+
+        function saveData() {
+            localStorage.setItem('finanplan_data', JSON.stringify(appData));
+            updateAppUI();
+        }
+
+        function resetDataPrompt() {
+            if (confirm("Deseja restaurar os dados iniciais de demonstração? Seus dados inseridos serão resetados.")) {
+                appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                saveData();
+            }
+        }
+
+        // --- Motor de Cálculos Financeiros ---
+        function calculateMetrics() {
+            const income = appData.income || 0;
+
+            // 1. Total para Metas Mensais
+            const totalMetasMensal = appData.goals.reduce((acc, goal) => {
+                const mensal = goal.total / (goal.months || 1);
+                return acc + mensal;
+            }, 0);
+
+            // 2. Custos Fixos Totais (para cálculo de fundo de emergência se necessário)
+            const custosFixos = appData.expenses
+                .filter(e => e.type === 'Fixa')
+                .reduce((acc, e) => acc + e.amount, 0);
+
+            // 3. Cálculo da Reserva de Emergência
+            let reservaMensal = 0;
+            let reservaFundoAlvo = custosFixos * 6; // Meta recomendada de 6 meses de custos fixos
+
+            if (appData.reservaConfig.type === 'percent') {
+                reservaMensal = income * (appData.reservaConfig.value / 100);
+            } else if (appData.reservaConfig.type === 'fixed') {
+                reservaMensal = appData.reservaConfig.value;
+            } else if (appData.reservaConfig.type === 'months') {
+                // Quer atingir a reserva em X meses
+                const mesesMeta = appData.reservaConfig.value || 12;
+                reservaMensal = reservaFundoAlvo / mesesMeta;
+            }
+
+            // 4. Teto Recomendado para Gastos
+            const tetoGastos = Math.max(0, income - (totalMetasMensal + reservaMensal));
+
+            // 5. Total de Gastos Cadastrados
+            const totalGastos = appData.expenses.reduce((acc, e) => acc + e.amount, 0);
+
+            // 6. Saldo Livre Restante no Mês
+            const saldoLivre = income - (totalMetasMensal + reservaMensal + totalGastos);
+
+            return {
+                income,
+                totalMetasMensal,
+                reservaMensal,
+                reservaFundoAlvo,
+                tetoGastos,
+                totalGastos,
+                saldoLivre,
+                custosFixos
+            };
+        }
+
+        // --- Atualização Completa da Interface ---
+        function updateAppUI() {
+            const metrics = calculateMetrics();
+
+            // Sincronizar inputs principais
+            document.getElementById('input-renda').value = appData.income || '';
+            document.getElementById('select-reserva-tipo').value = appData.reservaConfig.type;
+            document.getElementById('input-reserva-val').value = appData.reservaConfig.value;
+
+            // Rótulo dinâmico da reserva
+            const reservaLabel = document.getElementById('reserva-label');
+            if (appData.reservaConfig.type === 'percent') reservaLabel.textContent = 'Porcentagem da Renda (%)';
+            else if (appData.reservaConfig.type === 'fixed') reservaLabel.textContent = 'Valor Mensal Fixo (R$)';
+            else reservaLabel.textContent = 'Prazo em Meses para Acumular';
+
+            // Atualizar KPIs
+            document.getElementById('kpi-renda').textContent = formatBRL(metrics.income);
+            document.getElementById('kpi-metas').textContent = formatBRL(metrics.totalMetasMensal);
+            document.getElementById('kpi-reserva').textContent = formatBRL(metrics.reservaMensal);
+            document.getElementById('kpi-teto').textContent = formatBRL(metrics.tetoGastos);
+            document.getElementById('kpi-gastos').textContent = formatBRL(metrics.totalGastos);
+            document.getElementById('kpi-saldo').textContent = formatBRL(metrics.saldoLivre);
+
+            document.getElementById('reserva-mensal-calc').textContent = formatBRL(metrics.reservaMensal);
+            document.getElementById('reserva-fundo-alvo').textContent = formatBRL(metrics.reservaFundoAlvo);
+
+            // Atualizar Alertas Inteligentes
+            updateAlerts(metrics);
+
+            // Atualizar Renderização das Listas
+            renderGoalsList();
+            renderExpensesList();
+
+            // Atualizar Gráfico
+            renderChart(metrics);
+        }
+
+        function updateAlerts(metrics) {
+            const banner = document.getElementById('alert-banner');
+            const icon = document.getElementById('alert-icon');
+            const title = document.getElementById('alert-title');
+            const desc = document.getElementById('alert-desc');
+
+            if (metrics.income <= 0) {
+                banner.className = "rounded-xl p-4 border bg-amber-500/10 border-amber-500/30 text-amber-300 flex items-start gap-3";
+                icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+                title.textContent = "Defina sua Renda Mensal";
+                desc.textContent = "Insira o valor total dos seus ganhos mensais para liberar o planejamento do teto de gastos.";
+            } else if (metrics.totalGastos > metrics.tetoGastos) {
+                const excesso = metrics.totalGastos - metrics.tetoGastos;
+                banner.className = "rounded-xl p-4 border bg-rose-500/10 border-rose-500/30 text-rose-300 flex items-start gap-3";
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                title.textContent = "Atenção: Você ultrapassou o teto de gastos recomendado!";
+                desc.textContent = `Suas despesas cadastradas somam ${formatBRL(metrics.totalGastos)}, o que supera em ${formatBRL(excesso)} o limite disponível de ${formatBRL(metrics.tetoGastos)} para manter suas metas e reservas intactas.`;
+            } else if (metrics.saldoLivre < 0) {
+                banner.className = "rounded-xl p-4 border bg-rose-500/10 border-rose-500/30 text-rose-300 flex items-start gap-3";
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                title.textContent = "Orçamento no Vermelho";
+                desc.textContent = `Suas metas, reserva e gastos combinados superam seus ganhos em ${formatBRL(Math.abs(metrics.saldoLivre))}. Tente ajustar prazos ou despesas.`;
+            } else {
+                banner.className = "rounded-xl p-4 border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-start gap-3";
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                title.textContent = "Planejamento Financeiro Saudável!";
+                desc.textContent = `Parabéns! Suas contas cabem no teto recomendado e você tem ${formatBRL(metrics.saldoLivre)} de saldo livre sobrando este mês.`;
+            }
+
+            banner.classList.remove('hidden');
+        }
+
+        function renderGoalsList() {
+            const container = document.getElementById('goals-container');
+            container.innerHTML = '';
+
+            if (appData.goals.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-slate-500 text-xs">
+                        Nenhum objetivo cadastrado. Adicione metas como a compra de um carro, casa ou viagem!
+                    </div>
+                `;
+                return;
+            }
+
+            appData.goals.forEach(goal => {
+                const mensal = goal.total / (goal.months || 1);
+                const progressPct = Math.min(100, Math.round(((goal.currentSaved || 0) / goal.total) * 100));
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/70 border border-slate-700/60 rounded-xl p-4 relative flex flex-col justify-between hover:border-cyan-500/40 transition-colors";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm">
+                                    <i class="fa-solid ${goal.icon || 'fa-gem'}"></i>
+                                </div>
+                                <h4 class="font-bold text-white text-sm">${goal.name}</h4>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button onclick="editGoal('${goal.id}')" class="text-slate-400 hover:text-cyan-400 p-1 text-xs"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteGoal('${goal.id}')" class="text-slate-400 hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1 mt-3">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-400">Reserva Mensal:</span>
+                                <span class="font-bold text-cyan-400">${formatBRL(mensal)}/mês</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-400">Valor Alvo:</span>
+                                <span class="text-slate-200 font-medium">${formatBRL(goal.total)} (${goal.months} meses)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800">
+                        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                            <span>Progresso Acumulado</span>
+                            <span>${progressPct}% (${formatBRL(goal.currentSaved || 0)})</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                            <div class="bg-cyan-500 h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderExpensesList() {
+            const tbody = document.getElementById('expenses-table-body');
+            const emptyMsg = document.getElementById('expenses-empty');
+            tbody.innerHTML = '';
+
+            if (appData.expenses.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+            emptyMsg.classList.add('hidden');
+
+            appData.expenses.forEach(exp => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/20 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-medium text-white">${exp.name}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                            ${exp.category}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="text-xs ${exp.type === 'Fixa' ? 'text-amber-400' : 'text-slate-400'}">
+                            ${exp.type}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-right font-semibold text-rose-400">${formatBRL(exp.amount)}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="editExpense('${exp.id}')" class="text-slate-400 hover:text-cyan-400 p-1 mr-1 text-xs"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteExpense('${exp.id}')" class="text-slate-400 hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderChart(metrics) {
+            const ctx = document.getElementById('chart-orcamento').getContext('2d');
+
+            const metas = metrics.totalMetasMensal;
+            const reserva = metrics.reservaMensal;
+            const gastos = metrics.totalGastos;
+            const livre = Math.max(0, metrics.saldoLivre);
+            const total = metrics.income || (metas + reserva + gastos + livre) || 1;
+
+            // Porcentagens
+            document.getElementById('pct-metas').textContent = Math.round((metas / total) * 100) + '%';
+            document.getElementById('pct-reserva').textContent = Math.round((reserva / total) * 100) + '%';
+            document.getElementById('pct-gastos').textContent = Math.round((gastos / total) * 100) + '%';
+            document.getElementById('pct-livre').textContent = Math.round((livre / total) * 100) + '%';
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Metas', 'Reserva', 'Despesas', 'Saldo Livre'],
+                    datasets: [{
+                        data: [metas, reserva, gastos, livre],
+                        backgroundColor: [
+                            '#06b6d4', // cyan-500
+                            '#6366f1', // indigo-500
+                            '#f43f5e', // rose-500
+                            '#10b981'  // emerald-500
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#1e293b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${formatBRL(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // --- Event Listeners dos Inputs de Renda e Reserva ---
+        document.getElementById('input-renda').addEventListener('input', (e) => {
+            appData.income = parseFloat(e.target.value) || 0;
+            saveData();
+        });
+
+        document.getElementById('select-reserva-tipo').addEventListener('change', (e) => {
+            appData.reservaConfig.type = e.target.value;
+            saveData();
+        });
+
+        document.getElementById('input-reserva-val').addEventListener('input', (e) => {
+            appData.reservaConfig.value = parseFloat(e.target.value) || 0;
+            saveData();
+        });
+
+        // --- Modais & CRUD de Metas ---
+        function openGoalModal(id = null) {
+            document.getElementById('modal-goal').classList.remove('hidden');
+            const form = document.getElementById('form-goal');
+            form.reset();
+
+            if (id) {
+                const goal = appData.goals.find(g => g.id === id);
+                if (goal) {
+                    document.getElementById('modal-goal-title').textContent = "Editar Meta";
+                    document.getElementById('goal-id').value = goal.id;
+                    document.getElementById('goal-name').value = goal.name;
+                    document.getElementById('goal-total').value = goal.total;
+                    document.getElementById('goal-months').value = goal.months;
+                    document.getElementById('goal-icon').value = goal.icon || 'fa-gem';
+                }
+            } else {
+                document.getElementById('modal-goal-title').textContent = "Nova Meta / Objetivo";
+                document.getElementById('goal-id').value = '';
+            }
+            updateGoalPreview();
+        }
+
+        function closeGoalModal() {
+            document.getElementById('modal-goal').classList.add('hidden');
+        }
+
+        function updateGoalPreview() {
+            const total = parseFloat(document.getElementById('goal-total').value) || 0;
+            const months = parseInt(document.getElementById('goal-months').value) || 1;
+            const mensal = total / Math.max(1, months);
+            document.getElementById('goal-preview-calc').textContent = `${formatBRL(mensal)} / mês`;
+        }
+
+        document.getElementById('goal-total').addEventListener('input', updateGoalPreview);
+        document.getElementById('goal-months').addEventListener('input', updateGoalPreview);
+
+        function saveGoal(e) {
+            e.preventDefault();
+            const id = document.getElementById('goal-id').value;
+            const name = document.getElementById('goal-name').value;
+            const total = parseFloat(document.getElementById('goal-total').value) || 0;
+            const months = parseInt(document.getElementById('goal-months').value) || 1;
+            const icon = document.getElementById('goal-icon').value;
+
+            if (id) {
+                const index = appData.goals.findIndex(g => g.id === id);
+                if (index !== -1) {
+                    appData.goals[index] = { ...appData.goals[index], name, total, months, icon };
+                }
+            } else {
+                appData.goals.push({
+                    id: Date.now().toString(),
+                    name,
+                    total,
+                    months,
+                    currentSaved: 0,
+                    icon
+                });
+            }
+
+            closeGoalModal();
+            saveData();
+        }
+
+        function editGoal(id) {
+            openGoalModal(id);
+        }
+
+        function deleteGoal(id) {
+            if (confirm("Tem certeza que deseja excluir esta meta?")) {
+                appData.goals = appData.goals.filter(g => g.id !== id);
+                saveData();
+            }
+        }
+
+        // --- Modais & CRUD de Despesas ---
+        function openExpenseModal(id = null) {
+            document.getElementById('modal-expense').classList.remove('hidden');
+            const form = document.getElementById('form-expense');
+            form.reset();
+
+            if (id) {
+                const exp = appData.expenses.find(e => e.id === id);
+                if (exp) {
+                    document.getElementById('modal-expense-title').textContent = "Editar Despesa";
+                    document.getElementById('expense-id').value = exp.id;
+                    document.getElementById('expense-name').value = exp.name;
+                    document.getElementById('expense-amount').value = exp.amount;
+                    document.getElementById('expense-category').value = exp.category;
+                    document.getElementById('expense-type').value = exp.type;
+                }
+            } else {
+                document.getElementById('modal-expense-title').textContent = "Adicionar Nova Despesa";
+                document.getElementById('expense-id').value = '';
+            }
+        }
+
+        function closeExpenseModal() {
+            document.getElementById('modal-expense').classList.add('hidden');
+        }
+
+        function saveExpense(e) {
+            e.preventDefault();
+            const id = document.getElementById('expense-id').value;
+            const name = document.getElementById('expense-name').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+            const category = document.getElementById('expense-category').value;
+            const type = document.getElementById('expense-type').value;
+
+            if (id) {
+                const index = appData.expenses.findIndex(e => e.id === id);
+                if (index !== -1) {
+                    appData.expenses[index] = { id, name, amount, category, type };
+                }
+            } else {
+                appData.expenses.push({
+                    id: Date.now().toString(),
+                    name,
+                    amount,
+                    category,
+                    type
+                });
+            }
+
+            closeExpenseModal();
+            saveData();
+        }
+
+        function editExpense(id) {
+            openExpenseModal(id);
+        }
+
+        function deleteExpense(id) {
+            if (confirm("Tem certeza que deseja remover esta despesa?")) {
+                appData.expenses = appData.expenses.filter(e => e.id !== id);
+                saveData();
+            }
+        }
+
+        // --- Inicialização da Aplicação ---
+        window.onload = function() {
+            updateAppUI();
+        };
+    </script>
+</body>
+</html>
