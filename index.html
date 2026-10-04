@@ -97,22 +97,24 @@
   <!-- Conteúdo Principal -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8 w-full">
 
+    <!-- KPIs -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
         <p class="text-xs font-medium text-slate-400 uppercase">Renda Mensal</p>
         <h3 class="text-2xl font-extrabold text-emerald-400 mt-1" id="kpi-income">R$ 0,00</h3>
       </div>
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400 uppercase">Contas & Gastos Fixos</p>
+        <p class="text-xs font-medium text-slate-400 uppercase">Contas Fixas</p>
         <h3 class="text-2xl font-extrabold text-rose-400 mt-1" id="kpi-expenses">R$ 0,00</h3>
-        <p class="text-[11px] text-slate-500 mt-2" id="kpi-expenses-ratio">0% da sua renda</p>
+        <p class="text-[11px] text-slate-500 mt-1" id="kpi-expenses-ratio">0% da sua renda</p>
       </div>
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400 uppercase">Guardar (Metas + Reserva)</p>
-        <h3 class="text-2xl font-extrabold text-sky-400 mt-1" id="kpi-savings-needed">R$ 0,00</h3>
+        <p class="text-xs font-medium text-slate-400 uppercase">Despesas Lançadas (Mês)</p>
+        <h3 class="text-2xl font-extrabold text-orange-400 mt-1" id="kpi-daily-expenses">R$ 0,00</h3>
+        <p class="text-[11px] text-slate-500 mt-1" id="kpi-daily-count">0 lançamentos</p>
       </div>
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400 uppercase">Limite Gastos Livres</p>
+        <p class="text-xs font-medium text-slate-400 uppercase">Saldo Livre Restante</p>
         <h3 class="text-2xl font-extrabold text-amber-400 mt-1" id="kpi-free-budget">R$ 0,00</h3>
       </div>
     </div>
@@ -126,8 +128,10 @@
       </div>
     </div>
 
-    <!-- Formulários -->
+    <!-- Seção de Lançamento de Despesas / Contas -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Coluna 1: Renda e Lançamento de Despesas Diárias -->
       <div class="space-y-6">
         <!-- Renda -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
@@ -141,26 +145,70 @@
           </form>
         </div>
 
-        <!-- Contas -->
+        <!-- Nova Despesa Diária / Variável -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-rose-400"><i class="fa-solid fa-receipt"></i> 2. Contas Fixas</h2>
+          <h2 class="text-lg font-bold text-orange-400"><i class="fa-solid fa-cart-shopping"></i> 2. Lançar Despesa / Gasto</h2>
+          <form id="daily-expense-form" class="space-y-3">
+            <input type="text" id="daily-expense-desc" placeholder="Ex: Mercado, Combustível, Farmácia" required 
+                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-orange-500">
+            
+            <div class="grid grid-cols-2 gap-3">
+              <input type="number" id="daily-expense-amount" step="0.01" placeholder="Valor (R$)" required 
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-orange-500">
+              
+              <select id="daily-expense-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-sm text-slate-100">
+                <option value="Alimentação">Alimentação</option>
+                <option value="Transporte">Transporte</option>
+                <option value="Lazer">Lazer</option>
+                <option value="Saúde">Saúde</option>
+                <option value="Outros" selected>Outros</option>
+              </select>
+            </div>
+
+            <input type="date" id="daily-expense-date" required
+                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100">
+
+            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-2.5 rounded-xl font-medium text-sm transition">
+              + Registrar Despesa
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Coluna 2: Contas Fixas e Lista de Despesas Lançadas -->
+      <div class="space-y-6">
+        <!-- Contas Fixas -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <h2 class="text-lg font-bold text-rose-400"><i class="fa-solid fa-receipt"></i> 3. Contas Fixas</h2>
           <form id="expense-form" class="space-y-3">
-            <input type="text" id="expense-name" placeholder="Descrição da conta" required 
+            <input type="text" id="expense-name" placeholder="Ex: Aluguel, Luz, Internet" required 
                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-rose-500">
             <input type="number" id="expense-amount" step="0.01" placeholder="Valor (R$)" required 
                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-rose-500">
             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-rose-400 py-2.5 rounded-xl border border-rose-500/20 text-sm">
-              + Adicionar Conta
+              + Adicionar Conta Fixa
             </button>
           </form>
-          <ul id="expense-list" class="space-y-2 max-h-48 overflow-y-auto pt-2"></ul>
+          <ul id="expense-list" class="space-y-2 max-h-36 overflow-y-auto pt-2"></ul>
+        </div>
+
+        <!-- Lista de Despesas Lançadas -->
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-orange-400 flex items-center gap-2">
+              <i class="fa-solid fa-list-ul"></i> Histórico de Despesas
+            </h3>
+            <span id="total-daily-badge" class="text-xs bg-orange-500/10 border border-orange-500/20 text-orange-300 px-2.5 py-1 rounded-lg">R$ 0,00</span>
+          </div>
+          <div id="daily-expenses-list" class="space-y-2 max-h-48 overflow-y-auto"></div>
         </div>
       </div>
 
-      <!-- Reserva & Metas -->
+      <!-- Coluna 3: Reserva, Metas e Gráfico -->
       <div class="space-y-6">
+        <!-- Reserva -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-sky-400"><i class="fa-solid fa-shield-heart"></i> 3. Reserva de Emergência</h2>
+          <h2 class="text-lg font-bold text-sky-400"><i class="fa-solid fa-shield-heart"></i> 4. Reserva de Emergência</h2>
           <form id="reserve-form" class="space-y-3">
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -186,14 +234,11 @@
               Atualizar Reserva
             </button>
           </form>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
-            <div class="flex justify-between"><span>Meta Reserva:</span><span id="reserve-target-val" class="font-bold">R$ 0,00</span></div>
-            <div class="flex justify-between"><span>Aporte Mensal:</span><span id="reserve-monthly-val" class="text-sky-400 font-bold">R$ 0,00</span></div>
-          </div>
         </div>
 
+        <!-- Metas -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-amber-400"><i class="fa-solid fa-bullseye"></i> 4. Suas Metas (Carro/Casa)</h2>
+          <h2 class="text-lg font-bold text-amber-400"><i class="fa-solid fa-bullseye"></i> 5. Metas</h2>
           <form id="goal-form" class="space-y-3">
             <input type="text" id="goal-name" placeholder="Ex: Entrada do Carro" required 
                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100">
@@ -203,33 +248,26 @@
               <input type="number" id="goal-months" min="1" placeholder="Meses" required 
                      class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100">
             </div>
-            <input type="number" id="goal-current" step="0.01" placeholder="Já guardou quanto?" value="0" 
-                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100">
             <button type="submit" class="w-full bg-slate-800 text-amber-400 py-2.5 rounded-xl border border-amber-500/20 text-sm">
               + Adicionar Meta
             </button>
           </form>
-        </div>
-      </div>
-
-      <!-- Lista Metas e Gráfico -->
-      <div class="space-y-6">
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-list-check text-amber-400"></i> Metas Ativas</h3>
-          <div id="goals-list" class="space-y-3 max-h-[260px] overflow-y-auto"></div>
+          <div id="goals-list" class="space-y-3 max-h-36 overflow-y-auto"></div>
         </div>
 
+        <!-- Gráfico -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-chart-pie text-emerald-400"></i> Distribuição</h3>
-          <div class="relative w-full h-48 flex items-center justify-center">
+          <div class="relative w-full h-44 flex items-center justify-center">
             <canvas id="budgetChart"></canvas>
           </div>
         </div>
       </div>
+
     </div>
   </main>
 
-  <!-- MÓDULOS DO FIREBASE SDK (MODULAR v11) -->
+  <!-- FIREBASE SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
     import { 
@@ -239,7 +277,6 @@
       getFirestore, doc, setDoc, onSnapshot 
     } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
-    // Configuração com seus dados da foto!
     const firebaseConfig = {
       apiKey: "AIzaSyC3nMdS6ZIKY0URYWypIbXOr5si3FkHiFk",
       authDomain: "fagundesfinaceiro-2c00e.firebaseapp.com",
@@ -261,22 +298,31 @@
     let appData = {
       income: 0,
       expenses: [],
+      dailyExpenses: [],
       reserve: { monthsCoverage: 6, currentSaved: 0, targetMonthsToBuild: 12 },
       goals: []
     };
 
-    // Monitorar estado de autenticação
+    // Data de hoje padrão no campo de data
+    document.getElementById('daily-expense-date').valueAsDate = new Date();
+
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
         document.getElementById('auth-modal').classList.add('hidden');
         document.getElementById('user-display-email').innerText = user.email;
 
-        // Escutar alterações do Firestore em tempo real
         const userDocRef = doc(db, "users", user.uid);
         onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
-            appData = docSnap.data();
+            const data = docSnap.data();
+            appData = {
+              income: data.income || 0,
+              expenses: data.expenses || [],
+              dailyExpenses: data.dailyExpenses || [],
+              reserve: data.reserve || { monthsCoverage: 6, currentSaved: 0, targetMonthsToBuild: 12 },
+              goals: data.goals || []
+            };
             updateInputs();
             render();
           } else {
@@ -290,7 +336,6 @@
       }
     });
 
-    // Salvar dados no Firebase Firestore
     async function saveToFirebase() {
       if (!currentUser) return;
       try {
@@ -300,7 +345,7 @@
       }
     }
 
-    // Alternar Login / Cadastro
+    // Toggle Auth
     document.getElementById('toggle-auth-mode').addEventListener('click', () => {
       authMode = authMode === 'login' ? 'register' : 'login';
       document.getElementById('auth-title').innerText = authMode === 'register' ? 'Criar Conta no Firebase' : 'Entrar na sua Conta';
@@ -308,7 +353,6 @@
       document.getElementById('toggle-auth-mode').innerText = authMode === 'register' ? 'Já tem conta? Fazer login' : 'Não tem conta? Criar conta no Firebase';
     });
 
-    // Form de Login / Registro
     document.getElementById('auth-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('auth-email').value;
@@ -328,16 +372,33 @@
       }
     });
 
-    // Sair
     document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-    // Form Handlers
+    // Form Renda
     document.getElementById('income-form').addEventListener('submit', (e) => {
       e.preventDefault();
       appData.income = parseFloat(document.getElementById('income-input').value) || 0;
       saveToFirebase();
     });
 
+    // Form Despesa Diária
+    document.getElementById('daily-expense-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const desc = document.getElementById('daily-expense-desc').value.trim();
+      const amount = parseFloat(document.getElementById('daily-expense-amount').value) || 0;
+      const category = document.getElementById('daily-expense-category').value;
+      const date = document.getElementById('daily-expense-date').value;
+
+      if (desc && amount > 0) {
+        appData.dailyExpenses.push({ id: Date.now(), desc, amount, category, date });
+        document.getElementById('daily-expense-desc').value = '';
+        document.getElementById('daily-expense-amount').value = '';
+        document.getElementById('daily-expense-date').valueAsDate = new Date();
+        saveToFirebase();
+      }
+    });
+
+    // Form Contas Fixas
     document.getElementById('expense-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('expense-name').value.trim();
@@ -350,6 +411,7 @@
       }
     });
 
+    // Form Reserva
     document.getElementById('reserve-form').addEventListener('submit', (e) => {
       e.preventDefault();
       appData.reserve.monthsCoverage = parseInt(document.getElementById('reserve-months').value) || 6;
@@ -358,25 +420,29 @@
       saveToFirebase();
     });
 
+    // Form Metas
     document.getElementById('goal-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('goal-name').value.trim();
       const target = parseFloat(document.getElementById('goal-target').value) || 0;
       const months = parseInt(document.getElementById('goal-months').value) || 1;
-      const current = parseFloat(document.getElementById('goal-current').value) || 0;
 
       if (name && target > 0) {
-        appData.goals.push({ id: Date.now(), name, target, months, current });
+        appData.goals.push({ id: Date.now(), name, target, months, current: 0 });
         document.getElementById('goal-name').value = '';
         document.getElementById('goal-target').value = '';
         document.getElementById('goal-months').value = '';
-        document.getElementById('goal-current').value = '0';
         saveToFirebase();
       }
     });
 
     window.deleteExpense = (id) => {
       appData.expenses = appData.expenses.filter(i => i.id !== id);
+      saveToFirebase();
+    };
+
+    window.deleteDailyExpense = (id) => {
+      appData.dailyExpenses = appData.dailyExpenses.filter(i => i.id !== id);
       saveToFirebase();
     };
 
@@ -397,31 +463,34 @@
     }
 
     function render() {
-      const totalExpenses = appData.expenses.reduce((a, b) => a + b.amount, 0);
-      const reserveTargetTotal = totalExpenses * appData.reserve.monthsCoverage;
+      const totalFixed = appData.expenses.reduce((a, b) => a + b.amount, 0);
+      const totalDaily = appData.dailyExpenses.reduce((a, b) => a + b.amount, 0);
+      
+      const reserveTargetTotal = totalFixed * appData.reserve.monthsCoverage;
       const reserveRemaining = Math.max(0, reserveTargetTotal - appData.reserve.currentSaved);
       const reserveMonthlyAporte = appData.reserve.targetMonthsToBuild > 0 ? reserveRemaining / appData.reserve.targetMonthsToBuild : 0;
 
       let goalsMonthlyTotal = 0;
       appData.goals.forEach(g => {
-        const remaining = Math.max(0, g.target - g.current);
+        const remaining = Math.max(0, g.target - (g.current || 0));
         goalsMonthlyTotal += g.months > 0 ? remaining / g.months : 0;
       });
 
       const totalSavingsNeeded = reserveMonthlyAporte + goalsMonthlyTotal;
-      const freeBudget = appData.income - totalExpenses - totalSavingsNeeded;
+      const freeBudget = appData.income - totalFixed - totalDaily - totalSavingsNeeded;
 
       document.getElementById('kpi-income').innerText = formatBRL(appData.income);
-      document.getElementById('kpi-expenses').innerText = formatBRL(totalExpenses);
-      document.getElementById('kpi-savings-needed').innerText = formatBRL(totalSavingsNeeded);
+      document.getElementById('kpi-expenses').innerText = formatBRL(totalFixed);
+      document.getElementById('kpi-daily-expenses').innerText = formatBRL(totalDaily);
+      document.getElementById('kpi-daily-count').innerText = `${appData.dailyExpenses.length} lançamentos`;
       document.getElementById('kpi-free-budget').innerText = formatBRL(freeBudget);
 
-      const expRatio = appData.income > 0 ? ((totalExpenses / appData.income) * 100).toFixed(1) : 0;
+      const expRatio = appData.income > 0 ? (((totalFixed + totalDaily) / appData.income) * 100).toFixed(1) : 0;
       document.getElementById('kpi-expenses-ratio').innerText = `${expRatio}% da renda comprometida`;
 
-      // Lista Despesas
+      // Lista Contas Fixas
       const expenseListEl = document.getElementById('expense-list');
-      expenseListEl.innerHTML = appData.expenses.length === 0 ? '<li class="text-xs text-slate-500 text-center">Nenhuma conta cadastrada.</li>' : '';
+      expenseListEl.innerHTML = appData.expenses.length === 0 ? '<li class="text-xs text-slate-500 text-center py-2">Nenhuma conta fixa.</li>' : '';
       appData.expenses.forEach(exp => {
         expenseListEl.innerHTML += `
           <li class="flex justify-between items-center bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs">
@@ -433,22 +502,37 @@
           </li>`;
       });
 
-      // Reserva
-      document.getElementById('reserve-target-val').innerText = formatBRL(reserveTargetTotal);
-      document.getElementById('reserve-monthly-val').innerText = `${formatBRL(reserveMonthlyAporte)}/mês`;
+      // Lista Despesas Diárias
+      const dailyListEl = document.getElementById('daily-expenses-list');
+      document.getElementById('total-daily-badge').innerText = formatBRL(totalDaily);
+      dailyListEl.innerHTML = appData.dailyExpenses.length === 0 ? '<div class="text-xs text-slate-500 text-center py-2">Nenhuma despesa lançada neste mês.</div>' : '';
+      
+      // Ordenar por data mais recente
+      const sortedDaily = [...appData.dailyExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+      sortedDaily.forEach(d => {
+        dailyListEl.innerHTML += `
+          <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
+            <div class="space-y-0.5">
+              <div class="font-medium text-slate-200">${d.desc}</div>
+              <div class="text-[10px] text-slate-500"><span class="text-orange-400">${d.category}</span> • ${d.date}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-orange-400">${formatBRL(d.amount)}</span>
+              <button onclick="deleteDailyExpense(${d.id})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+          </div>`;
+      });
 
-      // Lista Metas
+      // Metas
       const goalsListEl = document.getElementById('goals-list');
-      goalsListEl.innerHTML = appData.goals.length === 0 ? '<div class="text-xs text-slate-500 text-center">Nenhuma meta cadastrada.</div>' : '';
+      goalsListEl.innerHTML = appData.goals.length === 0 ? '<div class="text-xs text-slate-500 text-center">Nenhuma meta.</div>' : '';
       appData.goals.forEach(goal => {
-        const remaining = Math.max(0, goal.target - goal.current);
+        const remaining = Math.max(0, goal.target - (goal.current || 0));
         const monthly = goal.months > 0 ? remaining / goal.months : 0;
-        const pct = Math.min(100, (goal.current / goal.target) * 100);
         goalsListEl.innerHTML += `
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1 text-xs">
-            <div class="flex justify-between font-bold"><span>${goal.name}</span><button onclick="deleteGoal(${goal.id})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></div>
-            <div class="flex justify-between text-slate-400"><span>Meta: ${formatBRL(goal.target)}</span><span class="text-amber-400 font-bold">${formatBRL(monthly)}/mês</span></div>
-            <div class="w-full bg-slate-800 rounded-full h-1.5 mt-1"><div class="bg-amber-400 h-1.5 rounded-full" style="width:${pct}%"></div></div>
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+            <div><span class="font-bold">${goal.name}</span><div class="text-[10px] text-slate-400">Total: ${formatBRL(goal.target)}</div></div>
+            <div class="flex items-center gap-2"><span class="text-amber-400 font-bold">${formatBRL(monthly)}/mês</span><button onclick="deleteGoal(${goal.id})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></div>
           </div>`;
       });
 
@@ -463,24 +547,24 @@
       } else {
         alertBox.className = freeBudget < 0 ? "p-4 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-200 flex items-start gap-3" : "p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-200 flex items-start gap-3";
         document.getElementById('budget-health-icon').className = freeBudget < 0 ? "fa-solid fa-circle-exclamation text-rose-400 text-lg" : "fa-solid fa-circle-check text-emerald-400 text-lg";
-        document.getElementById('budget-health-title').innerText = freeBudget < 0 ? "Economias superam a renda!" : "Orçamento Saúdavel!";
-        document.getElementById('budget-health-msg').innerText = freeBudget < 0 ? `Aumente os prazos das metas. Déficit de ${formatBRL(Math.abs(freeBudget))}` : `Você tem ${formatBRL(freeBudget)} livres por mês após pagar contas e guardar suas economias.`;
+        document.getElementById('budget-health-title').innerText = freeBudget < 0 ? "Atenção: Gastos superaram o orçamento!" : "Orçamento Saúdavel!";
+        document.getElementById('budget-health-msg').innerText = freeBudget < 0 ? `Déficit de ${formatBRL(Math.abs(freeBudget))}. Ajuste seus gastos diários ou metas.` : `Você tem ${formatBRL(freeBudget)} livres após pagar contas, despesas diárias e economizar.`;
         alertBox.classList.remove('hidden');
       }
 
-      renderChart(totalExpenses, totalSavingsNeeded, Math.max(0, freeBudget));
+      renderChart(totalFixed, totalDaily, totalSavingsNeeded, Math.max(0, freeBudget));
     }
 
-    function renderChart(expenses, savings, free) {
+    function renderChart(fixed, daily, savings, free) {
       const ctx = document.getElementById('budgetChart').getContext('2d');
       if (budgetChart) budgetChart.destroy();
       budgetChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['Contas', 'Economias', 'Livre'],
-          datasets: [{ data: [expenses, savings, free], backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24'], borderWidth: 0 }]
+          labels: ['Fixas', 'Despesas', 'Economias', 'Livre'],
+          datasets: [{ data: [fixed, daily, savings, free], backgroundColor: ['#f43f5e', '#f97316', '#38bdf8', '#fbbf24'], borderWidth: 0 }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }, cutout: '70%' }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } }, cutout: '70%' }
       });
     }
   </script>
