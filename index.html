@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerenciador Financeiro & Metas</title>
+  <title>Gestão & Planejamento Financeiro</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -25,10 +25,54 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDKs (v9 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased">
 
-  <!-- Header -->
+  <!-- Tela de Login / Segurança (Fica visível até autenticar) -->
+  <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl max-w-md w-full space-y-6 shadow-2xl">
+      <div class="text-center space-y-2">
+        <div class="inline-flex p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-400 mb-1">
+          <i class="fa-solid fa-lock text-2xl"></i>
+        </div>
+        <h2 id="auth-title" class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
+          Área Protegida
+        </h2>
+        <p id="auth-subtitle" class="text-xs text-slate-400">Entre com sua conta para acessar suas finanças com total segurança</p>
+      </div>
+
+      <div id="auth-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-center"></div>
+
+      <form id="auth-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">E-mail</label>
+          <input type="email" id="auth-email" required placeholder="seuemail@exemplo.com"
+                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Senha (Mínimo 6 caracteres)</label>
+          <input type="password" id="auth-password" required minlength="6" placeholder="••••••••"
+                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+        <button type="submit" id="auth-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20">
+          <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
+        </button>
+      </form>
+
+      <div class="text-center pt-2 border-t border-slate-800">
+        <button id="toggle-auth-mode" type="button" class="text-xs text-emerald-400 hover:underline">
+          Não tem conta? Criar nova conta segura
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Protegido -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
       <div class="flex items-center gap-3">
@@ -39,15 +83,18 @@
           <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
             Gestão & Planejamento Financeiro
           </h1>
-          <p class="text-xs text-emerald-400">Modo Local Ativo (Sem Erros)</p>
+          <p class="text-xs text-slate-400" id="sync-status">Conectado com Segurança</p>
         </div>
       </div>
       
       <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50">
-          <i class="fa-solid fa-user-check text-emerald-400"></i>
-          <span>Kaique Fagundes</span>
+        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50">
+          <i class="fa-solid fa-user-shield text-emerald-400"></i>
+          <span id="user-display-email">Protegido</span>
         </div>
+        <button id="logout-btn" class="bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 px-3 py-1.5 rounded-lg border border-slate-700/50 text-xs transition flex items-center gap-1.5">
+          <i class="fa-solid fa-right-from-bracket"></i> Sair
+        </button>
       </div>
     </div>
   </header>
@@ -55,7 +102,6 @@
   <!-- Conteúdo Principal -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8 w-full">
 
-    <!-- Cards Superiores de Renda Total e Totais -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
         <p class="text-xs font-medium text-slate-400 uppercase">Renda Total Bruta</p>
@@ -79,7 +125,6 @@
       </div>
     </div>
 
-    <!-- Alerta e Diagnóstico com Recomendação de Gastos -->
     <div id="budget-health-alert" class="hidden p-4 rounded-xl border flex items-start gap-3">
       <i id="budget-health-icon" class="text-xl mt-0.5"></i>
       <div>
@@ -88,10 +133,9 @@
       </div>
     </div>
 
-    <!-- Formulários Principais -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <!-- Coluna 1: Entradas Discriminadas -->
+      <!-- Coluna 1 -->
       <div class="space-y-6">
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
@@ -99,432 +143,4 @@
           </h2>
           <form id="income-form" class="space-y-3">
             <div>
-              <label class="block text-xs text-slate-400 mb-1">Salário Líquido (R$)</label>
-              <input type="number" id="income-salary" step="0.01" placeholder="0.00"
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-xs text-slate-400 mb-1">Vale Alimentação (VA)</label>
-                <input type="number" id="income-va" step="0.01" placeholder="0.00"
-                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-              </div>
-              <div>
-                <label class="block text-xs text-slate-400 mb-1">Vale Refeição (VR)</label>
-                <input type="number" id="income-vr" step="0.01" placeholder="0.00"
-                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Premiações / Bônus Extra (R$)</label>
-              <input type="number" id="income-bonus" step="0.01" placeholder="0.00"
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-            </div>
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition text-sm">
-              Atualizar Renda Total
-            </button>
-          </form>
-        </div>
-
-        <!-- Lançamento de Despesa Variável (Mercado, Gasolina, etc.) -->
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-orange-400 flex items-center gap-2">
-            <i class="fa-solid fa-basket-shopping"></i> 2. Mercado, Gasolina e Compras
-          </h2>
-          <form id="daily-expense-form" class="space-y-3">
-            <input type="text" id="daily-expense-desc" placeholder="Ex: Supermercado, Posto Shell, Almoço" required 
-                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-orange-500">
-            
-            <div class="grid grid-cols-2 gap-3">
-              <input type="number" id="daily-expense-amount" step="0.01" placeholder="Valor (R$)" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-orange-500">
-              
-              <select id="daily-expense-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-sm text-slate-100">
-                <option value="Mercado">Mercado</option>
-                <option value="Gasolina/Combustível">Gasolina/Combustível</option>
-                <option value="Comida/Restaurante">Comida/Restaurante</option>
-                <option value="Lazer">Lazer</option>
-                <option value="Farmácia/Saúde">Farmácia/Saúde</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-1">Banco / Cartão</label>
-                <select id="daily-expense-bank" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs text-slate-100">
-                  <option value="Nubank">Nubank</option>
-                  <option value="Inter">Banco Inter</option>
-                  <option value="Itaú">Itaú</option>
-                  <option value="Bradesco">Bradesco</option>
-                  <option value="Cartão VR/VA">Cartão VR/VA</option>
-                  <option value="Dinheiro/Pix">Dinheiro / Pix</option>
-                  <option value="Outro">Outro Banco</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-1">Data</label>
-                <input type="date" id="daily-expense-date" required
-                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-slate-100">
-              </div>
-            </div>
-
-            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-2.5 rounded-xl font-medium text-sm transition">
-              + Registar Gasto
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Coluna 2: Contas Fixas e Histórico -->
-      <div class="space-y-6">
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-rose-400 flex items-center gap-2">
-            <i class="fa-solid fa-bolt"></i> 3. Contas Fixas (Luz, Água, Internet)
-          </h2>
-          <form id="expense-form" class="space-y-3">
-            <input type="text" id="expense-name" placeholder="Ex: Conta de Luz (CPFL), Conta de Água, Aluguel" required 
-                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-rose-500">
-            
-            <div class="grid grid-cols-2 gap-3">
-              <input type="number" id="expense-amount" step="0.01" placeholder="Valor (R$)" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-rose-500">
-              <select id="expense-bank" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs text-slate-100">
-                <option value="Nubank">Nubank</option>
-                <option value="Inter">Banco Inter</option>
-                <option value="Itaú">Itaú</option>
-                <option value="Bradesco">Bradesco</option>
-                <option value="Débito Automático">Débito Automático</option>
-                <option value="Outro">Outro Banco</option>
-              </select>
-            </div>
-
-            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-rose-400 py-2.5 rounded-xl border border-rose-500/20 text-sm">
-              + Adicionar / Atualizar Conta Fixa
-            </button>
-          </form>
-          <ul id="expense-list" class="space-y-2 max-h-36 overflow-y-auto pt-2"></ul>
-        </div>
-
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold text-orange-400 flex items-center gap-2">
-              <i class="fa-solid fa-list-check"></i> Histórico de Compras do Mês
-            </h3>
-            <span id="total-daily-badge" class="text-xs bg-orange-500/10 border border-orange-500/20 text-orange-300 px-2.5 py-1 rounded-lg">R$ 0,00</span>
-          </div>
-          <div id="daily-expenses-list" class="space-y-2 max-h-56 overflow-y-auto"></div>
-        </div>
-      </div>
-
-      <!-- Coluna 3: Reserva, Metas e Gráfico -->
-      <div class="space-y-6">
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-sky-400 flex items-center gap-2">
-            <i class="fa-solid fa-shield-halved"></i> 4. Reserva de Emergência
-          </h2>
-          <form id="reserve-form" class="space-y-3">
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="text-[11px] text-slate-400">Cobertura</label>
-                <select id="reserve-months" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-sm text-slate-100">
-                  <option value="3">3 Meses</option>
-                  <option value="6" selected>6 Meses</option>
-                  <option value="12">12 Meses</option>
-                </select>
-              </div>
-              <div>
-                <label class="text-[11px] text-slate-400">Já Guardado (R$)</label>
-                <input type="number" id="reserve-current" step="0.01" placeholder="0.00" 
-                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-sm text-slate-100">
-              </div>
-            </div>
-            <div>
-              <label class="text-[11px] text-slate-400">Prazo p/ juntar reserva (meses)</label>
-              <input type="number" id="reserve-target-months" min="1" value="12" 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100">
-            </div>
-            <button type="submit" class="w-full bg-slate-800 text-sky-400 py-2 rounded-xl border border-sky-500/20 text-sm">
-              Atualizar Reserva
-            </button>
-          </form>
-        </div>
-
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
-            <i class="fa-solid fa-car-side"></i> 5. Metas (Carro, Casa, etc.)
-          </h2>
-          <form id="goal-form" class="space-y-3">
-            <input type="text" id="goal-name" placeholder="Ex: Entrada do Carro, Reforma" required 
-                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100">
-            <div class="grid grid-cols-2 gap-3">
-              <input type="number" id="goal-target" step="0.01" placeholder="Valor Total" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100">
-              <input type="number" id="goal-months" min="1" placeholder="Em quantos meses?" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100">
-            </div>
-            <button type="submit" class="w-full bg-slate-800 text-amber-400 py-2.5 rounded-xl border border-amber-500/20 text-sm">
-              + Criar Meta
-            </button>
-          </form>
-          <div id="goals-list" class="space-y-3 max-h-36 overflow-y-auto"></div>
-        </div>
-
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-chart-pie text-emerald-400"></i> Distribuição dos Gastos</h3>
-          <div class="relative w-full h-44 flex items-center justify-center">
-            <canvas id="budgetChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </main>
-
-  <script>
-    let budgetChart = null;
-    let appData = {
-      incomeSalary: 0,
-      incomeVA: 0,
-      incomeVR: 0,
-      incomeBonus: 0,
-      expenses: [],
-      dailyExpenses: [],
-      reserve: { monthsCoverage: 6, currentSaved: 0, targetMonthsToBuild: 12 },
-      goals: []
-    };
-
-    document.getElementById('daily-expense-date').valueAsDate = new Date();
-
-    // Carregar dados salvos no navegador automaticamente
-    function loadData() {
-      const saved = localStorage.getItem('fagundes_financas_local');
-      if (saved) {
-        try {
-          appData = JSON.parse(saved);
-        } catch(e) {}
-      }
-      updateInputs();
-      render();
-    }
-
-    function saveData() {
-      localStorage.setItem('fagundes_financas_local', JSON.stringify(appData));
-      render();
-    }
-
-    document.getElementById('income-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      appData.incomeSalary = parseFloat(document.getElementById('income-salary').value) || 0;
-      appData.incomeVA = parseFloat(document.getElementById('income-va').value) || 0;
-      appData.incomeVR = parseFloat(document.getElementById('income-vr').value) || 0;
-      appData.incomeBonus = parseFloat(document.getElementById('income-bonus').value) || 0;
-      saveData();
-    });
-
-    document.getElementById('daily-expense-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const desc = document.getElementById('daily-expense-desc').value.trim();
-      const amount = parseFloat(document.getElementById('daily-expense-amount').value) || 0;
-      const category = document.getElementById('daily-expense-category').value;
-      const bank = document.getElementById('daily-expense-bank').value;
-      const date = document.getElementById('daily-expense-date').value;
-
-      if (desc && amount > 0) {
-        if (!appData.dailyExpenses) appData.dailyExpenses = [];
-        appData.dailyExpenses.push({ id: Date.now(), desc, amount, category, bank, date });
-        document.getElementById('daily-expense-desc').value = '';
-        document.getElementById('daily-expense-amount').value = '';
-        document.getElementById('daily-expense-date').valueAsDate = new Date();
-        saveData();
-      }
-    });
-
-    document.getElementById('expense-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('expense-name').value.trim();
-      const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
-      const bank = document.getElementById('expense-bank').value;
-      if (name && amount > 0) {
-        if (!appData.expenses) appData.expenses = [];
-        appData.expenses.push({ id: Date.now(), name, amount, bank });
-        document.getElementById('expense-name').value = '';
-        document.getElementById('expense-amount').value = '';
-        saveData();
-      }
-    });
-
-    document.getElementById('reserve-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!appData.reserve) appData.reserve = {};
-      appData.reserve.monthsCoverage = parseInt(document.getElementById('reserve-months').value) || 6;
-      appData.reserve.currentSaved = parseFloat(document.getElementById('reserve-current').value) || 0;
-      appData.reserve.targetMonthsToBuild = parseInt(document.getElementById('reserve-target-months').value) || 12;
-      saveData();
-    });
-
-    document.getElementById('goal-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('goal-name').value.trim();
-      const target = parseFloat(document.getElementById('goal-target').value) || 0;
-      const months = parseInt(document.getElementById('goal-months').value) || 1;
-
-      if (name && target > 0) {
-        if (!appData.goals) appData.goals = [];
-        appData.goals.push({ id: Date.now(), name, target, months, current: 0 });
-        document.getElementById('goal-name').value = '';
-        document.getElementById('goal-target').value = '';
-        document.getElementById('goal-months').value = '';
-        saveData();
-      }
-    });
-
-    window.deleteExpense = (id) => {
-      appData.expenses = (appData.expenses || []).filter(i => i.id !== id);
-      saveData();
-    };
-
-    window.deleteDailyExpense = (id) => {
-      appData.dailyExpenses = (appData.dailyExpenses || []).filter(i => i.id !== id);
-      saveData();
-    };
-
-    window.deleteGoal = (id) => {
-      appData.goals = (appData.goals || []).filter(i => i.id !== id);
-      saveData();
-    };
-
-    function updateInputs() {
-      document.getElementById('income-salary').value = appData.incomeSalary || '';
-      document.getElementById('income-va').value = appData.incomeVA || '';
-      document.getElementById('income-vr').value = appData.incomeVR || '';
-      document.getElementById('income-bonus').value = appData.incomeBonus || '';
-      document.getElementById('reserve-months').value = (appData.reserve && appData.reserve.monthsCoverage) || 6;
-      document.getElementById('reserve-current').value = (appData.reserve && appData.reserve.currentSaved) || 0;
-      document.getElementById('reserve-target-months').value = (appData.reserve && appData.reserve.targetMonthsToBuild) || 12;
-    }
-
-    function formatBRL(val) {
-      return (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
-
-    function render() {
-      const salary = appData.incomeSalary || 0;
-      const va = appData.incomeVA || 0;
-      const vr = appData.incomeVR || 0;
-      const bonus = appData.incomeBonus || 0;
-      const totalIncome = salary + va + vr + bonus;
-
-      const expenses = appData.expenses || [];
-      const dailyExpenses = appData.dailyExpenses || [];
-      const goals = appData.goals || [];
-      const reserve = appData.reserve || { monthsCoverage: 6, currentSaved: 0, targetMonthsToBuild: 12 };
-
-      const totalFixed = expenses.reduce((a, b) => a + b.amount, 0);
-      const totalDaily = dailyExpenses.reduce((a, b) => a + b.amount, 0);
-      
-      const reserveTargetTotal = totalFixed * reserve.monthsCoverage;
-      const reserveRemaining = Math.max(0, reserveTargetTotal - reserve.currentSaved);
-      const reserveMonthlyAporte = reserve.targetMonthsToBuild > 0 ? reserveRemaining / reserve.targetMonthsToBuild : 0;
-
-      let goalsMonthlyTotal = 0;
-      goals.forEach(g => {
-        const remaining = Math.max(0, g.target - (g.current || 0));
-        goalsMonthlyTotal += g.months > 0 ? remaining / g.months : 0;
-      });
-
-      const totalSavingsNeeded = reserveMonthlyAporte + goalsMonthlyTotal;
-      const freeBudget = totalIncome - totalFixed - totalDaily - totalSavingsNeeded;
-
-      document.getElementById('kpi-income').innerText = formatBRL(totalIncome);
-      document.getElementById('kpi-expenses').innerText = formatBRL(totalFixed);
-      document.getElementById('kpi-daily-expenses').innerText = formatBRL(totalDaily);
-      document.getElementById('kpi-daily-count').innerText = `${dailyExpenses.length} compras cadastradas`;
-      document.getElementById('kpi-free-budget').innerText = formatBRL(freeBudget);
-
-      const expRatio = totalIncome > 0 ? (((totalFixed + totalDaily) / totalIncome) * 100).toFixed(1) : 0;
-      document.getElementById('kpi-expenses-ratio').innerText = `${expRatio}% da renda comprometida`;
-
-      const expenseListEl = document.getElementById('expense-list');
-      expenseListEl.innerHTML = expenses.length === 0 ? '<li class="text-xs text-slate-500 text-center py-2">Nenhuma conta fixa cadastrada.</li>' : '';
-      expenses.forEach(exp => {
-        expenseListEl.innerHTML += `
-          <li class="flex justify-between items-center bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs">
-            <div>
-              <span class="font-medium text-slate-200">${exp.name}</span>
-              <span class="text-[10px] text-slate-500 block">${exp.bank || 'Banco não informado'}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-rose-400">${formatBRL(exp.amount)}</span>
-              <button onclick="deleteExpense(${exp.id})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
-            </div>
-          </li>`;
-      });
-
-      const dailyListEl = document.getElementById('daily-expenses-list');
-      document.getElementById('total-daily-badge').innerText = formatBRL(totalDaily);
-      dailyListEl.innerHTML = dailyExpenses.length === 0 ? '<div class="text-xs text-slate-500 text-center py-2">Nenhuma compra registrada este mês.</div>' : '';
-      
-      const sortedDaily = [...dailyExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-      sortedDaily.forEach(d => {
-        dailyListEl.innerHTML += `
-          <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
-            <div class="space-y-0.5">
-              <div class="font-medium text-slate-200">${d.desc}</div>
-              <div class="text-[10px] text-slate-500"><span class="text-orange-400 font-semibold">${d.category}</span> • ${d.bank || ''} • ${d.date}</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-orange-400">${formatBRL(d.amount)}</span>
-              <button onclick="deleteDailyExpense(${d.id})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
-            </div>
-          </div>`;
-      });
-
-      const goalsListEl = document.getElementById('goals-list');
-      goalsListEl.innerHTML = goals.length === 0 ? '<div class="text-xs text-slate-500 text-center">Nenhuma meta.</div>' : '';
-      goals.forEach(goal => {
-        const remaining = Math.max(0, goal.target - (goal.current || 0));
-        const monthly = goal.months > 0 ? remaining / goal.months : 0;
-        goalsListEl.innerHTML += `
-          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
-            <div><span class="font-bold">${goal.name}</span><div class="text-[10px] text-slate-400">Total: ${formatBRL(goal.target)}</div></div>
-            <div class="flex items-center gap-2"><span class="text-amber-400 font-bold">${formatBRL(monthly)}/mês</span><button onclick="deleteGoal(${goal.id})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button></div>
-          </div>`;
-      });
-
-      const alertBox = document.getElementById('budget-health-alert');
-      if (totalIncome === 0) {
-        alertBox.className = "p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-200 flex items-start gap-3";
-        document.getElementById('budget-health-icon').className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg";
-        document.getElementById('budget-health-title').innerText = "Preencha suas fontes de renda";
-        document.getElementById('budget-health-msg').innerText = "Informe seu salário, VA ou VR no passo 1 para ver quanto você pode gastar.";
-        alertBox.classList.remove('hidden');
-      } else {
-        alertBox.className = freeBudget < 0 ? "p-4 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-200 flex items-start gap-3" : "p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-200 flex items-start gap-3";
-        document.getElementById('budget-health-icon').className = freeBudget < 0 ? "fa-solid fa-circle-exclamation text-rose-400 text-lg" : "fa-solid fa-circle-check text-emerald-400 text-lg";
-        document.getElementById('budget-health-title').innerText = freeBudget < 0 ? "Atenção: Você ultrapassou seu orçamento!" : "Orçamento Controlado!";
-        document.getElementById('budget-health-msg').innerText = freeBudget < 0 ? `Seus gastos e metas ultrapassaram a renda em ${formatBRL(Math.abs(freeBudget))}. Segure gastos não essenciais!` : `Você ainda tem ${formatBRL(freeBudget)} livres este mês após pagar contas, mercado, combustível e guardar para suas metas.`;
-        alertBox.classList.remove('hidden');
-      }
-
-      renderChart(totalFixed, totalDaily, totalSavingsNeeded, Math.max(0, freeBudget));
-    }
-
-    function renderChart(fixed, daily, savings, free) {
-      const ctx = document.getElementById('budgetChart').getContext('2d');
-      if (budgetChart) budgetChart.destroy();
-      budgetChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Contas Fixas', 'Mercado/Gasolina', 'Reserva/Metas', 'Saldo Livre'],
-          datasets: [{ data: [fixed, daily, savings, free], backgroundColor: ['#f43f5e', '#f97316', '#38bdf8', '#fbbf24'], borderWidth: 0 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } }, cutout: '70%' }
-      });
-    }
-
-    // Inicializa ao carregar a página
-    loadData();
-  </script>
-</body>
-</html>
+              <label class="block text-xs text-slate-
