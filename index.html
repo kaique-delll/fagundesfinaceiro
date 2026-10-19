@@ -55,18 +55,21 @@
                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Senha</label>
-          <input type="password" id="auth-password" required placeholder="••••••••"
+          <label class="block text-xs font-medium text-slate-400 mb-1">Senha (Mínimo 6 caracteres)</label>
+          <input type="password" id="auth-password" required minlength="6" placeholder="••••••••"
                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
         </div>
         <button type="submit" id="auth-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2">
-          <i class="fa-solid fa-right-to-bracket"></i> Entrar
+          <i class="fa-solid fa-right-to-bracket"></i> Entrar / Entrar Localmente
         </button>
       </form>
 
-      <div class="text-center pt-2 border-t border-slate-800">
-        <button id="toggle-auth-mode" class="text-xs text-emerald-400 hover:underline">
+      <div class="text-center pt-2 border-t border-slate-800 space-y-2">
+        <button id="toggle-auth-mode" class="text-xs text-emerald-400 hover:underline block w-full">
           Não tem conta? Criar nova conta
+        </button>
+        <button id="local-mode-btn" class="text-xs text-slate-500 hover:text-slate-300 underline block w-full pt-1">
+          Ou entrar direto em Modo Local (Sem Firebase)
         </button>
       </div>
     </div>
@@ -83,7 +86,7 @@
           <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
             Gestão & Planejamento Financeiro
           </h1>
-          <p class="text-xs text-slate-400" id="sync-status">Carregando...</p>
+          <p class="text-xs text-slate-400" id="sync-status">A carregar...</p>
         </div>
       </div>
       
@@ -102,7 +105,6 @@
   <!-- Conteúdo Principal -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8 w-full">
 
-    <!-- Cards Superiores de Renda Total e Totais -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
         <p class="text-xs font-medium text-slate-400 uppercase">Renda Total Bruta</p>
@@ -126,7 +128,6 @@
       </div>
     </div>
 
-    <!-- Alerta e Diagnóstico com Recomendação de Gastos -->
     <div id="budget-health-alert" class="hidden p-4 rounded-xl border flex items-start gap-3">
       <i id="budget-health-icon" class="text-xl mt-0.5"></i>
       <div>
@@ -135,10 +136,9 @@
       </div>
     </div>
 
-    <!-- Formulários Principais -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <!-- Coluna 1: Entradas Discriminadas (Salário, VA, VR, Premiação) -->
+      <!-- Coluna 1 -->
       <div class="space-y-6">
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
@@ -161,96 +161,3 @@
                 <input type="number" id="income-vr" step="0.01" placeholder="0.00"
                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
               </div>
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Premiações / Bônus Extra (R$)</label>
-              <input type="number" id="income-bonus" step="0.01" placeholder="0.00"
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
-            </div>
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition text-sm">
-              Atualizar Renda Total
-            </button>
-          </form>
-        </div>
-
-        <!-- Lançamento de Despesa Variável (Mercado, Gasolina, etc.) -->
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-orange-400 flex items-center gap-2">
-            <i class="fa-solid fa-basket-shopping"></i> 2. Mercado, Gasolina e Compras
-          </h2>
-          <form id="daily-expense-form" class="space-y-3">
-            <input type="text" id="daily-expense-desc" placeholder="Ex: Supermercado, Posto Shell, Almoço" required 
-                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-orange-500">
-            
-            <div class="grid grid-cols-2 gap-3">
-              <input type="number" id="daily-expense-amount" step="0.01" placeholder="Valor (R$)" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-orange-500">
-              
-              <select id="daily-expense-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-sm text-slate-100">
-                <option value="Mercado">Mercado</option>
-                <option value="Gasolina/Combustível">Gasolina/Combustível</option>
-                <option value="Comida/Restaurante">Comida/Restaurante</option>
-                <option value="Lazer">Lazer</option>
-                <option value="Farmácia/Saúde">Farmácia/Saúde</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-1">Banco / Cartão</label>
-                <select id="daily-expense-bank" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs text-slate-100">
-                  <option value="Nubank">Nubank</option>
-                  <option value="Inter">Banco Inter</option>
-                  <option value="Itaú">Itaú</option>
-                  <option value="Bradesco">Bradesco</option>
-                  <option value="Cartão VR/VA">Cartão VR/VA</option>
-                  <option value="Dinheiro/Pix">Dinheiro / Pix</option>
-                  <option value="Outro">Outro Banco</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-1">Data</label>
-                <input type="date" id="daily-expense-date" required
-                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-slate-100">
-              </div>
-            </div>
-
-            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-2.5 rounded-xl font-medium text-sm transition">
-              + Registar Gasto
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Coluna 2: Contas Fixas (Água/Luz) e Histórico de Gastos -->
-      <div class="space-y-6">
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-rose-400 flex items-center gap-2">
-            <i class="fa-solid fa-bolt"></i> 3. Contas Fixas (Luz, Água, Internet)
-          </h2>
-          <form id="expense-form" class="space-y-3">
-            <input type="text" id="expense-name" placeholder="Ex: Conta de Luz (CPFL), Conta de Água, Aluguel" required 
-                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-rose-500">
-            
-            <div class="grid grid-cols-2 gap-3">
-              <input type="number" id="expense-amount" step="0.01" placeholder="Valor (R$)" required 
-                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-rose-500">
-              <select id="expense-bank" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs text-slate-100">
-                <option value="Nubank">Nubank</option>
-                <option value="Inter">Banco Inter</option>
-                <option value="Itaú">Itaú</option>
-                <option value="Bradesco">Bradesco</option>
-                <option value="Débito Automático">Débito Automático</option>
-                <option value="Outro">Outro Banco</option>
-              </select>
-            </div>
-
-            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-rose-400 py-2.5 rounded-xl border border-rose-500/20 text-sm">
-              + Adicionar / Atualizar Conta Fixa
-            </button>
-          </form>
-          <ul id="expense-list" class="space-y-2 max-h-36 overflow-y-auto pt-2"></ul>
-        </div>
-
-        <!--
