@@ -25,20 +25,25 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDKs (Compat v9+) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased">
 
-  <!-- Tela de Auth (Login / Cadastro Firebase) -->
+  <!-- Tela de Auth (Login / Cadastro) -->
   <div id="auth-modal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl max-w-md w-full space-y-6 shadow-2xl relative">
       <div class="text-center space-y-2">
         <div class="inline-flex p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-400 mb-1">
-          <i class="fa-solid fa-fire text-2xl"></i>
+          <i class="fa-solid fa-lock text-2xl"></i>
         </div>
         <h2 id="auth-title" class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
-          Entrar na sua Conta
+          Entrar no Planejador
         </h2>
-        <p id="auth-subtitle" class="text-xs text-slate-400">Dados protegidos na nuvem do Firebase</p>
+        <p id="auth-subtitle" class="text-xs text-slate-400">Aceda às suas finanças e metas com segurança</p>
       </div>
 
       <div id="auth-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-center"></div>
@@ -50,7 +55,7 @@
                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Senha</label>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Palavra-passe</label>
           <input type="password" id="auth-password" required placeholder="••••••••"
                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
         </div>
@@ -61,7 +66,7 @@
 
       <div class="text-center pt-2 border-t border-slate-800">
         <button id="toggle-auth-mode" class="text-xs text-emerald-400 hover:underline">
-          Não tem uma conta? Criar conta no Firebase
+          Não tem conta? Criar nova conta
         </button>
       </div>
     </div>
@@ -76,16 +81,16 @@
         </div>
         <div>
           <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
-            Gestão & Planejamento
+            Gestão & Planeamento
           </h1>
-          <p class="text-xs text-slate-400">Conectado ao Firebase Cloud</p>
+          <p class="text-xs text-slate-400" id="sync-status">A carregar...</p>
         </div>
       </div>
       
       <div class="flex items-center gap-3">
         <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400 bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700/50">
-          <i class="fa-solid fa-cloud-check text-emerald-400"></i>
-          <span id="user-display-email">Carregando...</span>
+          <i class="fa-solid fa-user-check text-emerald-400"></i>
+          <span id="user-display-email">Sessão Iniciada</span>
         </div>
         <button id="logout-btn" class="bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 px-3 py-1.5 rounded-lg border border-slate-700/50 text-xs transition flex items-center gap-1.5">
           <i class="fa-solid fa-right-from-bracket"></i> Sair
@@ -100,18 +105,18 @@
     <!-- KPIs -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400 uppercase">Renda Mensal</p>
+        <p class="text-xs font-medium text-slate-400 uppercase">Rendimento Mensal</p>
         <h3 class="text-2xl font-extrabold text-emerald-400 mt-1" id="kpi-income">R$ 0,00</h3>
       </div>
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400 uppercase">Contas Fixas</p>
+        <p class="text-xs font-medium text-slate-400 uppercase">Despesas Fixas</p>
         <h3 class="text-2xl font-extrabold text-rose-400 mt-1" id="kpi-expenses">R$ 0,00</h3>
-        <p class="text-[11px] text-slate-500 mt-1" id="kpi-expenses-ratio">0% da sua renda</p>
+        <p class="text-[11px] text-slate-500 mt-1" id="kpi-expenses-ratio">0% do rendimento</p>
       </div>
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-        <p class="text-xs font-medium text-slate-400 uppercase">Despesas Lançadas (Mês)</p>
+        <p class="text-xs font-medium text-slate-400 uppercase">Gastos Diários (Mês)</p>
         <h3 class="text-2xl font-extrabold text-orange-400 mt-1" id="kpi-daily-expenses">R$ 0,00</h3>
-        <p class="text-[11px] text-slate-500 mt-1" id="kpi-daily-count">0 lançamentos</p>
+        <p class="text-[11px] text-slate-500 mt-1" id="kpi-daily-count">0 registos</p>
       </div>
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
         <p class="text-xs font-medium text-slate-400 uppercase">Saldo Livre Restante</p>
@@ -119,7 +124,7 @@
       </div>
     </div>
 
-    <!-- Diagnóstico -->
+    <!-- Alerta Diagnóstico -->
     <div id="budget-health-alert" class="hidden p-4 rounded-xl border flex items-start gap-3">
       <i id="budget-health-icon" class="text-xl mt-0.5"></i>
       <div>
@@ -128,28 +133,26 @@
       </div>
     </div>
 
-    <!-- Seção de Lançamento de Despesas / Contas -->
+    <!-- Formulários -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <!-- Coluna 1: Renda e Lançamento de Despesas Diárias -->
+      <!-- Coluna 1 -->
       <div class="space-y-6">
-        <!-- Renda -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-emerald-400"><i class="fa-solid fa-plus-circle"></i> 1. Renda Mensal</h2>
+          <h2 class="text-lg font-bold text-emerald-400"><i class="fa-solid fa-plus-circle"></i> 1. Rendimento Mensal</h2>
           <form id="income-form" class="space-y-3">
             <input type="number" id="income-input" step="0.01" placeholder="Ex: 4000.00" required 
                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500">
             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition text-sm">
-              Salvar Renda
+              Guardar Rendimento
             </button>
           </form>
         </div>
 
-        <!-- Nova Despesa Diária / Variável -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-orange-400"><i class="fa-solid fa-cart-shopping"></i> 2. Lançar Despesa / Gasto</h2>
+          <h2 class="text-lg font-bold text-orange-400"><i class="fa-solid fa-cart-shopping"></i> 2. Registar Despesa / Gasto</h2>
           <form id="daily-expense-form" class="space-y-3">
-            <input type="text" id="daily-expense-desc" placeholder="Ex: Mercado, Combustível, Farmácia" required 
+            <input type="text" id="daily-expense-desc" placeholder="Ex: Supermercado, Combustível, Farmácia" required 
                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-orange-500">
             
             <div class="grid grid-cols-2 gap-3">
@@ -169,34 +172,32 @@
                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100">
 
             <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-2.5 rounded-xl font-medium text-sm transition">
-              + Registrar Despesa
+              + Registar Gasto
             </button>
           </form>
         </div>
       </div>
 
-      <!-- Coluna 2: Contas Fixas e Lista de Despesas Lançadas -->
+      <!-- Coluna 2 -->
       <div class="space-y-6">
-        <!-- Contas Fixas -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 class="text-lg font-bold text-rose-400"><i class="fa-solid fa-receipt"></i> 3. Contas Fixas</h2>
+          <h2 class="text-lg font-bold text-rose-400"><i class="fa-solid fa-receipt"></i> 3. Despesas Fixas</h2>
           <form id="expense-form" class="space-y-3">
-            <input type="text" id="expense-name" placeholder="Ex: Aluguel, Luz, Internet" required 
+            <input type="text" id="expense-name" placeholder="Ex: Renda, Luz, Internet" required 
                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-rose-500">
             <input type="number" id="expense-amount" step="0.01" placeholder="Valor (R$)" required 
                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-rose-500">
             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-rose-400 py-2.5 rounded-xl border border-rose-500/20 text-sm">
-              + Adicionar Conta Fixa
+              + Adicionar Despesa Fixa
             </button>
           </form>
           <ul id="expense-list" class="space-y-2 max-h-36 overflow-y-auto pt-2"></ul>
         </div>
 
-        <!-- Lista de Despesas Lançadas -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <div class="flex justify-between items-center">
             <h3 class="font-bold text-orange-400 flex items-center gap-2">
-              <i class="fa-solid fa-list-ul"></i> Histórico de Despesas
+              <i class="fa-solid fa-list-ul"></i> Histórico de Gastos
             </h3>
             <span id="total-daily-badge" class="text-xs bg-orange-500/10 border border-orange-500/20 text-orange-300 px-2.5 py-1 rounded-lg">R$ 0,00</span>
           </div>
@@ -204,9 +205,8 @@
         </div>
       </div>
 
-      <!-- Coluna 3: Reserva, Metas e Gráfico -->
+      <!-- Coluna 3 -->
       <div class="space-y-6">
-        <!-- Reserva -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <h2 class="text-lg font-bold text-sky-400"><i class="fa-solid fa-shield-heart"></i> 4. Reserva de Emergência</h2>
           <form id="reserve-form" class="space-y-3">
@@ -236,7 +236,6 @@
           </form>
         </div>
 
-        <!-- Metas -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <h2 class="text-lg font-bold text-amber-400"><i class="fa-solid fa-bullseye"></i> 5. Metas</h2>
           <form id="goal-form" class="space-y-3">
@@ -255,7 +254,6 @@
           <div id="goals-list" class="space-y-3 max-h-36 overflow-y-auto"></div>
         </div>
 
-        <!-- Gráfico -->
         <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
           <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-chart-pie text-emerald-400"></i> Distribuição</h3>
           <div class="relative w-full h-44 flex items-center justify-center">
@@ -267,16 +265,8 @@
     </div>
   </main>
 
-  <!-- FIREBASE SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-    import { 
-      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-    import { 
-      getFirestore, doc, setDoc, onSnapshot 
-    } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-
+  <script>
+    // Configuração do Firebase com os dados do projeto
     const firebaseConfig = {
       apiKey: "AIzaSyC3nMdS6ZIKY0URYWypIbXOr5si3FkHiFk",
       authDomain: "fagundesfinaceiro-2c00e.firebaseapp.com",
@@ -287,9 +277,10 @@
       measurementId: "G-SXJCD69YSK"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    // Inicialização do Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     let currentUser = null;
     let authMode = 'login';
@@ -303,31 +294,35 @@
       goals: []
     };
 
-    // Data de hoje padrão no campo de data
     document.getElementById('daily-expense-date').valueAsDate = new Date();
 
-    onAuthStateChanged(auth, (user) => {
+    // Gestão do Estado de Autenticação
+    auth.onAuthStateChanged((user) => {
       if (user) {
         currentUser = user;
         document.getElementById('auth-modal').classList.add('hidden');
         document.getElementById('user-display-email').innerText = user.email;
 
-        const userDocRef = doc(db, "users", user.uid);
-        onSnapshot(userDocRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            appData = {
-              income: data.income || 0,
-              expenses: data.expenses || [],
-              dailyExpenses: data.dailyExpenses || [],
-              reserve: data.reserve || { monthsCoverage: 6, currentSaved: 0, targetMonthsToBuild: 12 },
-              goals: data.goals || []
-            };
-            updateInputs();
-            render();
+        // Carregar do localStorage em primeiro lugar (mecanismo instantâneo)
+        loadFromLocalStorage();
+
+        // Tentar obter/sincronizar em tempo real com o Firestore
+        db.collection("users").doc(user.uid).onSnapshot((doc) => {
+          if (doc.exists) {
+            appData = doc.data();
+            saveToLocalStorage();
+            document.getElementById('sync-status').innerText = "Sincronizado na Nuvem (Firebase)";
+            document.getElementById('sync-status').className = "text-xs text-emerald-400";
           } else {
-            saveToFirebase();
+            saveData();
           }
+          updateInputs();
+          render();
+        }, (error) => {
+          console.warn("Firestore inacessível ou sem permissão. A utilizar modo local:", error);
+          document.getElementById('sync-status').innerText = "Modo Guardado Localmente";
+          document.getElementById('sync-status').className = "text-xs text-amber-400";
+          render();
         });
 
       } else {
@@ -336,52 +331,78 @@
       }
     });
 
-    async function saveToFirebase() {
-      if (!currentUser) return;
-      try {
-        await setDoc(doc(db, "users", currentUser.uid), appData);
-      } catch (err) {
-        console.error("Erro ao salvar no Firebase:", err);
+    // Função de gravação dupla (Guarda no LocalStorage + envia para o Firebase)
+    function saveData() {
+      saveToLocalStorage();
+      if (currentUser) {
+        db.collection("users").doc(currentUser.uid).set(appData)
+          .then(() => {
+            document.getElementById('sync-status').innerText = "Guardado na Nuvem";
+            document.getElementById('sync-status').className = "text-xs text-emerald-400";
+          })
+          .catch((err) => {
+            console.error("Erro ao guardar no Firestore:", err);
+            document.getElementById('sync-status').innerText = "Guardado Localmente";
+            document.getElementById('sync-status').className = "text-xs text-amber-400";
+          });
+      }
+      render();
+    }
+
+    function saveToLocalStorage() {
+      if (currentUser) {
+        localStorage.setItem(`finances_data_${currentUser.uid}`, JSON.stringify(appData));
       }
     }
 
-    // Toggle Auth
+    function loadFromLocalStorage() {
+      if (currentUser) {
+        const local = localStorage.getItem(`finances_data_${currentUser.uid}`);
+        if (local) {
+          try {
+            appData = JSON.parse(local);
+          } catch(e) {}
+        }
+      }
+    }
+
+    // Toggle Login/Registo
     document.getElementById('toggle-auth-mode').addEventListener('click', () => {
       authMode = authMode === 'login' ? 'register' : 'login';
-      document.getElementById('auth-title').innerText = authMode === 'register' ? 'Criar Conta no Firebase' : 'Entrar na sua Conta';
-      document.getElementById('auth-submit-btn').innerHTML = authMode === 'register' ? '<i class="fa-solid fa-user-plus"></i> Cadastrar' : '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
-      document.getElementById('toggle-auth-mode').innerText = authMode === 'register' ? 'Já tem conta? Fazer login' : 'Não tem conta? Criar conta no Firebase';
+      document.getElementById('auth-title').innerText = authMode === 'register' ? 'Criar Conta' : 'Entrar no Planejador';
+      document.getElementById('auth-submit-btn').innerHTML = authMode === 'register' ? '<i class="fa-solid fa-user-plus"></i> Registar' : '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
+      document.getElementById('toggle-auth-mode').innerText = authMode === 'register' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar nova conta';
     });
 
-    document.getElementById('auth-form').addEventListener('submit', async (e) => {
+    document.getElementById('auth-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('auth-email').value;
       const pass = document.getElementById('auth-password').value;
       const errorEl = document.getElementById('auth-error');
       errorEl.classList.add('hidden');
 
-      try {
-        if (authMode === 'register') {
-          await createUserWithEmailAndPassword(auth, email, pass);
-        } else {
-          await signInWithEmailAndPassword(auth, email, pass);
-        }
-      } catch (err) {
-        errorEl.innerText = "Erro: " + err.message;
-        errorEl.classList.remove('hidden');
+      if (authMode === 'register') {
+        auth.createUserWithEmailAndPassword(email, pass).catch((err) => {
+          errorEl.innerText = "Erro ao registar: " + err.message;
+          errorEl.classList.remove('hidden');
+        });
+      } else {
+        auth.signInWithEmailAndPassword(email, pass).catch((err) => {
+          errorEl.innerText = "Erro ao entrar: " + err.message;
+          errorEl.classList.remove('hidden');
+        });
       }
     });
 
-    document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+    document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
 
-    // Form Renda
+    // Formulários
     document.getElementById('income-form').addEventListener('submit', (e) => {
       e.preventDefault();
       appData.income = parseFloat(document.getElementById('income-input').value) || 0;
-      saveToFirebase();
+      saveData();
     });
 
-    // Form Despesa Diária
     document.getElementById('daily-expense-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const desc = document.getElementById('daily-expense-desc').value.trim();
@@ -390,37 +411,37 @@
       const date = document.getElementById('daily-expense-date').value;
 
       if (desc && amount > 0) {
+        if (!appData.dailyExpenses) appData.dailyExpenses = [];
         appData.dailyExpenses.push({ id: Date.now(), desc, amount, category, date });
         document.getElementById('daily-expense-desc').value = '';
         document.getElementById('daily-expense-amount').value = '';
         document.getElementById('daily-expense-date').valueAsDate = new Date();
-        saveToFirebase();
+        saveData();
       }
     });
 
-    // Form Contas Fixas
     document.getElementById('expense-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('expense-name').value.trim();
       const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
       if (name && amount > 0) {
+        if (!appData.expenses) appData.expenses = [];
         appData.expenses.push({ id: Date.now(), name, amount });
         document.getElementById('expense-name').value = '';
         document.getElementById('expense-amount').value = '';
-        saveToFirebase();
+        saveData();
       }
     });
 
-    // Form Reserva
     document.getElementById('reserve-form').addEventListener('submit', (e) => {
       e.preventDefault();
+      if (!appData.reserve) appData.reserve = {};
       appData.reserve.monthsCoverage = parseInt(document.getElementById('reserve-months').value) || 6;
       appData.reserve.currentSaved = parseFloat(document.getElementById('reserve-current').value) || 0;
       appData.reserve.targetMonthsToBuild = parseInt(document.getElementById('reserve-target-months').value) || 12;
-      saveToFirebase();
+      saveData();
     });
 
-    // Form Metas
     document.getElementById('goal-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('goal-name').value.trim();
@@ -428,34 +449,35 @@
       const months = parseInt(document.getElementById('goal-months').value) || 1;
 
       if (name && target > 0) {
+        if (!appData.goals) appData.goals = [];
         appData.goals.push({ id: Date.now(), name, target, months, current: 0 });
         document.getElementById('goal-name').value = '';
         document.getElementById('goal-target').value = '';
         document.getElementById('goal-months').value = '';
-        saveToFirebase();
+        saveData();
       }
     });
 
     window.deleteExpense = (id) => {
-      appData.expenses = appData.expenses.filter(i => i.id !== id);
-      saveToFirebase();
+      appData.expenses = (appData.expenses || []).filter(i => i.id !== id);
+      saveData();
     };
 
     window.deleteDailyExpense = (id) => {
-      appData.dailyExpenses = appData.dailyExpenses.filter(i => i.id !== id);
-      saveToFirebase();
+      appData.dailyExpenses = (appData.dailyExpenses || []).filter(i => i.id !== id);
+      saveData();
     };
 
     window.deleteGoal = (id) => {
-      appData.goals = appData.goals.filter(i => i.id !== id);
-      saveToFirebase();
+      appData.goals = (appData.goals || []).filter(i => i.id !== id);
+      saveData();
     };
 
     function updateInputs() {
       document.getElementById('income-input').value = appData.income || '';
-      document.getElementById('reserve-months').value = appData.reserve.monthsCoverage || 6;
-      document.getElementById('reserve-current').value = appData.reserve.currentSaved || 0;
-      document.getElementById('reserve-target-months').value = appData.reserve.targetMonthsToBuild || 12;
+      document.getElementById('reserve-months').value = (appData.reserve && appData.reserve.monthsCoverage) || 6;
+      document.getElementById('reserve-current').value = (appData.reserve && appData.reserve.currentSaved) || 0;
+      document.getElementById('reserve-target-months').value = (appData.reserve && appData.reserve.targetMonthsToBuild) || 12;
     }
 
     function formatBRL(val) {
@@ -463,35 +485,40 @@
     }
 
     function render() {
-      const totalFixed = appData.expenses.reduce((a, b) => a + b.amount, 0);
-      const totalDaily = appData.dailyExpenses.reduce((a, b) => a + b.amount, 0);
+      const expenses = appData.expenses || [];
+      const dailyExpenses = appData.dailyExpenses || [];
+      const goals = appData.goals || [];
+      const reserve = appData.reserve || { monthsCoverage: 6, currentSaved: 0, targetMonthsToBuild: 12 };
+
+      const totalFixed = expenses.reduce((a, b) => a + b.amount, 0);
+      const totalDaily = dailyExpenses.reduce((a, b) => a + b.amount, 0);
       
-      const reserveTargetTotal = totalFixed * appData.reserve.monthsCoverage;
-      const reserveRemaining = Math.max(0, reserveTargetTotal - appData.reserve.currentSaved);
-      const reserveMonthlyAporte = appData.reserve.targetMonthsToBuild > 0 ? reserveRemaining / appData.reserve.targetMonthsToBuild : 0;
+      const reserveTargetTotal = totalFixed * reserve.monthsCoverage;
+      const reserveRemaining = Math.max(0, reserveTargetTotal - reserve.currentSaved);
+      const reserveMonthlyAporte = reserve.targetMonthsToBuild > 0 ? reserveRemaining / reserve.targetMonthsToBuild : 0;
 
       let goalsMonthlyTotal = 0;
-      appData.goals.forEach(g => {
+      goals.forEach(g => {
         const remaining = Math.max(0, g.target - (g.current || 0));
         goalsMonthlyTotal += g.months > 0 ? remaining / g.months : 0;
       });
 
       const totalSavingsNeeded = reserveMonthlyAporte + goalsMonthlyTotal;
-      const freeBudget = appData.income - totalFixed - totalDaily - totalSavingsNeeded;
+      const freeBudget = (appData.income || 0) - totalFixed - totalDaily - totalSavingsNeeded;
 
       document.getElementById('kpi-income').innerText = formatBRL(appData.income);
       document.getElementById('kpi-expenses').innerText = formatBRL(totalFixed);
       document.getElementById('kpi-daily-expenses').innerText = formatBRL(totalDaily);
-      document.getElementById('kpi-daily-count').innerText = `${appData.dailyExpenses.length} lançamentos`;
+      document.getElementById('kpi-daily-count').innerText = `${dailyExpenses.length} registos`;
       document.getElementById('kpi-free-budget').innerText = formatBRL(freeBudget);
 
       const expRatio = appData.income > 0 ? (((totalFixed + totalDaily) / appData.income) * 100).toFixed(1) : 0;
-      document.getElementById('kpi-expenses-ratio').innerText = `${expRatio}% da renda comprometida`;
+      document.getElementById('kpi-expenses-ratio').innerText = `${expRatio}% do rendimento comprometido`;
 
-      // Lista Contas Fixas
+      // Lista Despesas Fixas
       const expenseListEl = document.getElementById('expense-list');
-      expenseListEl.innerHTML = appData.expenses.length === 0 ? '<li class="text-xs text-slate-500 text-center py-2">Nenhuma conta fixa.</li>' : '';
-      appData.expenses.forEach(exp => {
+      expenseListEl.innerHTML = expenses.length === 0 ? '<li class="text-xs text-slate-500 text-center py-2">Nenhuma despesa fixa.</li>' : '';
+      expenses.forEach(exp => {
         expenseListEl.innerHTML += `
           <li class="flex justify-between items-center bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs">
             <span>${exp.name}</span>
@@ -502,13 +529,12 @@
           </li>`;
       });
 
-      // Lista Despesas Diárias
+      // Lista Gastos Diários
       const dailyListEl = document.getElementById('daily-expenses-list');
       document.getElementById('total-daily-badge').innerText = formatBRL(totalDaily);
-      dailyListEl.innerHTML = appData.dailyExpenses.length === 0 ? '<div class="text-xs text-slate-500 text-center py-2">Nenhuma despesa lançada neste mês.</div>' : '';
+      dailyListEl.innerHTML = dailyExpenses.length === 0 ? '<div class="text-xs text-slate-500 text-center py-2">Nenhum gasto registado este mês.</div>' : '';
       
-      // Ordenar por data mais recente
-      const sortedDaily = [...appData.dailyExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const sortedDaily = [...dailyExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
       sortedDaily.forEach(d => {
         dailyListEl.innerHTML += `
           <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
@@ -523,10 +549,10 @@
           </div>`;
       });
 
-      // Metas
+      // Lista Metas
       const goalsListEl = document.getElementById('goals-list');
-      goalsListEl.innerHTML = appData.goals.length === 0 ? '<div class="text-xs text-slate-500 text-center">Nenhuma meta.</div>' : '';
-      appData.goals.forEach(goal => {
+      goalsListEl.innerHTML = goals.length === 0 ? '<div class="text-xs text-slate-500 text-center">Nenhuma meta.</div>' : '';
+      goals.forEach(goal => {
         const remaining = Math.max(0, goal.target - (goal.current || 0));
         const monthly = goal.months > 0 ? remaining / goal.months : 0;
         goalsListEl.innerHTML += `
@@ -536,19 +562,19 @@
           </div>`;
       });
 
-      // Alerta
+      // Diagnóstico
       const alertBox = document.getElementById('budget-health-alert');
-      if (appData.income === 0) {
+      if (!appData.income || appData.income === 0) {
         alertBox.className = "p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-200 flex items-start gap-3";
         document.getElementById('budget-health-icon').className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg";
-        document.getElementById('budget-health-title').innerText = "Informe sua renda mensal";
-        document.getElementById('budget-health-msg').innerText = "Preencha a renda no passo 1 para ver o diagnóstico.";
+        document.getElementById('budget-health-title').innerText = "Insira o seu rendimento mensal";
+        document.getElementById('budget-health-msg').innerText = "Preencha o rendimento no passo 1 para calcular os limites.";
         alertBox.classList.remove('hidden');
       } else {
         alertBox.className = freeBudget < 0 ? "p-4 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-200 flex items-start gap-3" : "p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-200 flex items-start gap-3";
         document.getElementById('budget-health-icon').className = freeBudget < 0 ? "fa-solid fa-circle-exclamation text-rose-400 text-lg" : "fa-solid fa-circle-check text-emerald-400 text-lg";
-        document.getElementById('budget-health-title').innerText = freeBudget < 0 ? "Atenção: Gastos superaram o orçamento!" : "Orçamento Saúdavel!";
-        document.getElementById('budget-health-msg').innerText = freeBudget < 0 ? `Déficit de ${formatBRL(Math.abs(freeBudget))}. Ajuste seus gastos diários ou metas.` : `Você tem ${formatBRL(freeBudget)} livres após pagar contas, despesas diárias e economizar.`;
+        document.getElementById('budget-health-title').innerText = freeBudget < 0 ? "Atenção: Os gastos superaram o orçamento!" : "Orçamento Saudável!";
+        document.getElementById('budget-health-msg').innerText = freeBudget < 0 ? `Défice de ${formatBRL(Math.abs(freeBudget))}. Ajuste os seus gastos diários ou prazos das metas.` : `Tem ${formatBRL(freeBudget)} livres após pagar despesas, gastos diários e poupança.`;
         alertBox.classList.remove('hidden');
       }
 
@@ -561,7 +587,7 @@
       budgetChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['Fixas', 'Despesas', 'Economias', 'Livre'],
+          labels: ['Fixas', 'Gastos', 'Poupança', 'Livre'],
           datasets: [{ data: [fixed, daily, savings, free], backgroundColor: ['#f43f5e', '#f97316', '#38bdf8', '#fbbf24'], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } }, cutout: '70%' }
